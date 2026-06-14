@@ -21,11 +21,20 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { SteampunkCard } from '@/components/SteampunkCard';
 import { mockCustomers, mockClocks } from '@/mock/data';
+import { useRepairStore } from '@/store/repairStore';
+import { fileToBase64 } from '@/utils/image';
+import type { RepairRecord } from '@/types';
 import './style.css';
 
 const FormItem = Form.Item;
 const Option = Select.Option;
 const Step = Steps.Step;
+
+interface UploadedPhoto {
+  uid: string;
+  url: string;
+  name: string;
+}
 
 interface FormValues {
   customerId?: string;
@@ -47,7 +56,11 @@ const RepairCreate: React.FC = () => {
     priority: '中',
   });
   const [stepErrors, setStepErrors] = useState<string[]>([]);
+  const [beforePhotos, setBeforePhotos] = useState<UploadedPhoto[]>([]);
+  const [uploadingPhotos, setUploadingPhotos] = useState(false);
   const navigate = useNavigate();
+  const addRepair = useRepairStore((state) => state.addRepair);
+  const uploadPhoto = useRepairStore((state) => state.uploadPhoto);
 
   const customerClocks = mockClocks.filter((c) => c.customerId === selectedCustomer);
 
@@ -97,11 +110,72 @@ const RepairCreate: React.FC = () => {
     setCurrentStep(currentStep - 1);
   };
 
+  const handleCustomUpload = useCallback(() => {
+    return async (options: {
+      file: File;
+      onProgress: (percent: number) => void;
+      onSuccess: () => void;
+      onError: (response?: object) => void;
+    }) => {
+      const { file, onProgress, onSuccess, onError } = options;
+      try {
+        setUploadingPhotos(true);
+        onProgress(30);
+        const base64Url = await fileToBase64(file);
+        onProgress(70);
+        setBeforePhotos((prev) => [
+          ...prev,
+          {
+            uid: `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+            url: base64Url,
+            name: file.name || '照片',
+          },
+        ]);
+        onProgress(100);
+        onSuccess();
+      } catch (err) {
+        onError({ message: '上传失败' });
+        Message.error('照片上传失败');
+      } finally {
+        setUploadingPhotos(false);
+      }
+    };
+  }, []);
+
+  const handlePhotoRemove = useCallback((file: any) => {
+    setBeforePhotos((prev) => prev.filter((p) => p.uid !== file.uid));
+  }, []);
+
   const handleSubmit = async () => {
     try {
       await form.validate();
+      const values = form.getFieldsValue();
+      const customerData = mockCustomers.find((c) => c.id === values.customerId);
+      const clockData = mockClocks.find((c) => c.id === values.clockId);
+
+      const newRepair = addRepair({
+        customerId: values.customerId!,
+        customerName: customerData?.name || '',
+        clockId: values.clockId!,
+        clockInfo: clockData ? `${clockData.brand} ${clockData.model}` : '',
+        type: (values.type as RepairRecord['type']) || '维修',
+        priority: (values.priority as RepairRecord['priority']) || '中',
+        description: values.description || '',
+        expectedDate: values.expectedDate,
+        technician: values.technician,
+        notes: values.notes,
+      });
+
+      beforePhotos.forEach((photo) => {
+        uploadPhoto(newRepair.id, {
+          url: photo.url,
+          type: 'before',
+          name: photo.name,
+        });
+      });
+
       Message.success('维修单创建成功！');
-      navigate('/repairs');
+      navigate(`/repairs/${newRepair.id}`);
     } catch (e) {
       Message.error('请填写完整信息');
     }
@@ -282,6 +356,15 @@ const RepairCreate: React.FC = () => {
                   accept="image/*"
                   multiple
                   limit={10}
+                  customRequest={handleCustomUpload()}
+                  fileList={beforePhotos.map((p) => ({
+                    uid: p.uid,
+                    name: p.name,
+                    url: p.url,
+                    status: 'done' as const,
+                  }))}
+                  onRemove={handlePhotoRemove}
+                  disabled={uploadingPhotos}
                   tip="支持 jpg、png 格式，单张不超过 5MB"
                 >
                   <IconCamera />
@@ -310,6 +393,10 @@ const RepairCreate: React.FC = () => {
                   <p>
                     <strong style={{ color: 'var(--color-brass-light)' }}>故障描述：</strong>
                     {currentValues.description || '-'}
+                  </p>
+                  <p>
+                    <strong style={{ color: 'var(--color-brass-light)' }}>上传照片：</strong>
+                    {beforePhotos.length} 张
                   </p>
                   <p style={{ marginTop: '12px' }}>请确认以上信息无误后点击"提交"按钮创建维修单。</p>
                   <p>提交后，系统将自动生成维修单号并通知相关人员。</p>

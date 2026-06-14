@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Table,
   Input,
@@ -6,7 +6,7 @@ import {
   Select,
   Tag,
   Space,
-  DatePicker,
+  Empty,
 } from '@arco-design/web-react';
 import {
   IconPlus,
@@ -14,33 +14,40 @@ import {
   IconEye,
   IconTool,
 } from '@arco-design/web-react/icon';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { SteampunkCard } from '@/components/SteampunkCard';
-import { mockRepairRecords } from '@/mock/data';
+import { useRepairStore } from '@/store/repairStore';
 import type { RepairRecord } from '@/types';
 import '../Customer/style.css';
 
 const Option = Select.Option;
 
 const RepairList: React.FC = () => {
-  const [repairs] = useState<RepairRecord[]>(mockRepairRecords);
+  const repairs = useRepairStore((state) => state.repairs);
   const [searchText, setSearchText] = useState('');
   const [status, setStatus] = useState<string | undefined>();
   const [type, setType] = useState<string | undefined>();
   const [priority, setPriority] = useState<string | undefined>();
   const [pagination, setPagination] = useState({ current: 1, pageSize: 10 });
   const navigate = useNavigate();
+  const location = useLocation();
 
-  const filteredData = repairs.filter((r) => {
-    const matchSearch = !searchText ||
-      r.id.includes(searchText) ||
-      r.clockInfo.includes(searchText) ||
-      r.customerName.includes(searchText);
-    const matchStatus = !status || r.status === status;
-    const matchType = !type || r.type === type;
-    const matchPriority = !priority || r.priority === priority;
-    return matchSearch && matchStatus && matchType && matchPriority;
-  });
+  useEffect(() => {
+    setPagination((prev) => ({ ...prev, current: 1 }));
+  }, [location.key]);
+
+  const filteredData = useMemo(() => {
+    return repairs.filter((r) => {
+      const matchSearch = !searchText ||
+        r.id.toLowerCase().includes(searchText.toLowerCase()) ||
+        r.clockInfo.toLowerCase().includes(searchText.toLowerCase()) ||
+        r.customerName.toLowerCase().includes(searchText.toLowerCase());
+      const matchStatus = !status || r.status === status;
+      const matchType = !type || r.type === type;
+      const matchPriority = !priority || r.priority === priority;
+      return matchSearch && matchStatus && matchType && matchPriority;
+    });
+  }, [repairs, searchText, status, type, priority]);
 
   const getStatusColor = (status: string) => {
     const colorMap: Record<string, string> = {
