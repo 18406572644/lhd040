@@ -28,6 +28,8 @@ export interface Clock {
   createdAt: string;
 }
 
+export type RepairStatusType = '待接收' | '检测中' | '维修中' | '待取件' | '已完成' | '已取消';
+
 export interface RepairRecord {
   id: string;
   clockId: string;
@@ -35,11 +37,14 @@ export interface RepairRecord {
   customerId: string;
   customerName: string;
   type: '维修' | '保养' | '检测' | '翻新';
-  status: '待接收' | '检测中' | '维修中' | '待取件' | '已完成' | '已取消';
+  status: RepairStatusType;
   priority: '低' | '中' | '高' | '紧急';
   description: string;
   diagnosis?: string;
   solution?: string;
+  diagnosisResult?: string;
+  estimatedCost?: number;
+  pickupNotified?: string;
   partsUsed: RepairPart[];
   laborCost: number;
   partsCost: number;
@@ -51,6 +56,18 @@ export interface RepairRecord {
   completeDate?: string;
   technician?: string;
   notes?: string;
+  statusLogs: RepairStatusLog[];
+}
+
+export interface RepairStatusLog {
+  id: string;
+  fromStatus: RepairStatusType;
+  toStatus: RepairStatusType;
+  operator?: string;
+  remark?: string;
+  diagnosisResult?: string;
+  estimatedCost?: number;
+  createTime: string;
 }
 
 export interface RepairPart {

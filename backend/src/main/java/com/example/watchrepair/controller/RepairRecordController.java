@@ -2,9 +2,12 @@ package com.example.watchrepair.controller;
 
 import com.example.watchrepair.common.PageResult;
 import com.example.watchrepair.common.Result;
+import com.example.watchrepair.dto.PickupNotifyRequest;
+import com.example.watchrepair.dto.StatusTransitionRequest;
 import com.example.watchrepair.entity.RepairPart;
 import com.example.watchrepair.entity.RepairRecord;
 import com.example.watchrepair.entity.RepairStatus;
+import com.example.watchrepair.entity.RepairStatusLog;
 import com.example.watchrepair.service.RepairRecordService;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -50,6 +53,11 @@ public class RepairRecordController {
         return Result.success(repairRecordService.findById(id));
     }
 
+    @GetMapping("/{id}/status-logs")
+    public Result<List<RepairStatusLog>> getStatusLogs(@PathVariable Long id) {
+        return Result.success(repairRecordService.getStatusLogs(id));
+    }
+
     @PostMapping
     @PreAuthorize("hasRole('ADMIN') or hasRole('TECHNICIAN')")
     public Result<RepairRecord> create(@RequestBody RepairRecord repairRecord) {
@@ -64,8 +72,21 @@ public class RepairRecordController {
 
     @PutMapping("/{id}/status")
     @PreAuthorize("hasRole('ADMIN') or hasRole('TECHNICIAN')")
-    public Result<RepairRecord> updateStatus(@PathVariable Long id, @RequestParam RepairStatus status) {
-        return Result.success(repairRecordService.updateStatus(id, status));
+    public Result<RepairRecord> transitionStatus(@PathVariable Long id, @RequestBody StatusTransitionRequest request) {
+        return Result.success(repairRecordService.transitionStatus(id, request));
+    }
+
+    @PostMapping("/{id}/pickup-notify")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('TECHNICIAN') or hasRole('RECEPTIONIST')")
+    public Result<Void> sendPickupNotify(@PathVariable Long id, @RequestBody PickupNotifyRequest request) {
+        request.setRepairId(id);
+        repairRecordService.sendPickupNotify(request);
+        return Result.success();
+    }
+
+    @GetMapping("/status/transitions")
+    public Result<RepairStatus[]> getAvailableTransitions(@RequestParam RepairStatus currentStatus) {
+        return Result.success(currentStatus.getAllowedTransitions().toArray(new RepairStatus[0]));
     }
 
     @DeleteMapping("/{id}")

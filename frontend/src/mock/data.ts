@@ -202,6 +202,8 @@ export const mockRepairRecords: RepairRecord[] = [
     priority: '中',
     description: '手表走时不准，有时偷停',
     diagnosis: '机芯需要清洗保养，发条力矩不足',
+    diagnosisResult: '机芯需要清洗保养，发条力矩不足',
+    estimatedCost: 930,
     solution: '机芯清洗保养，更换发条',
     partsUsed: [
       { id: 'p1', name: '发条总成', quantity: 1, unitPrice: 280, totalPrice: 280 },
@@ -216,6 +218,11 @@ export const mockRepairRecords: RepairRecord[] = [
     expectedDate: '2024-06-20',
     technician: '张师傅',
     notes: '客户要求尽快处理',
+    statusLogs: [
+      { id: 'sl1', fromStatus: '待接收', toStatus: '待接收', operator: '前台小刘', remark: '创建维修工单', createTime: '2024-06-10 09:00' },
+      { id: 'sl2', fromStatus: '待接收', toStatus: '检测中', operator: '张师傅', remark: '接收工单，开始检测', createTime: '2024-06-10 10:30' },
+      { id: 'sl3', fromStatus: '检测中', toStatus: '维修中', operator: '张师傅', remark: '检测完成，确认维修方案', diagnosisResult: '机芯需要清洗保养，发条力矩不足', estimatedCost: 930, createTime: '2024-06-11 14:00' },
+    ],
   },
   {
     id: 'RX-2024-002',
@@ -237,6 +244,10 @@ export const mockRepairRecords: RepairRecord[] = [
     expectedDate: '2024-07-15',
     technician: '李师傅',
     notes: '古董表大修，需先检测报价',
+    statusLogs: [
+      { id: 'sl4', fromStatus: '待接收', toStatus: '待接收', operator: '前台小刘', remark: '创建维修工单', createTime: '2024-06-12 09:00' },
+      { id: 'sl5', fromStatus: '待接收', toStatus: '检测中', operator: '李师傅', remark: '开始检测古董表', createTime: '2024-06-12 11:00' },
+    ],
   },
   {
     id: 'RX-2024-003',
@@ -256,6 +267,9 @@ export const mockRepairRecords: RepairRecord[] = [
     afterPhotos: [],
     receiveDate: '2024-06-14',
     expectedDate: '2024-06-28',
+    statusLogs: [
+      { id: 'sl6', fromStatus: '待接收', toStatus: '待接收', remark: '创建维修工单', createTime: '2024-06-14 09:00' },
+    ],
   },
   {
     id: 'RX-2024-004',
@@ -268,6 +282,8 @@ export const mockRepairRecords: RepairRecord[] = [
     priority: '低',
     description: '走时检测',
     diagnosis: '日差+5秒，状态良好',
+    diagnosisResult: '日差+5秒，状态良好',
+    estimatedCost: 200,
     solution: '无需维修',
     partsUsed: [],
     laborCost: 200,
@@ -278,6 +294,13 @@ export const mockRepairRecords: RepairRecord[] = [
     receiveDate: '2024-06-01',
     completeDate: '2024-06-03',
     technician: '张师傅',
+    statusLogs: [
+      { id: 'sl7', fromStatus: '待接收', toStatus: '待接收', operator: '前台小刘', remark: '创建维修工单', createTime: '2024-06-01 09:00' },
+      { id: 'sl8', fromStatus: '待接收', toStatus: '检测中', operator: '张师傅', remark: '开始检测', createTime: '2024-06-01 10:00' },
+      { id: 'sl9', fromStatus: '检测中', toStatus: '维修中', operator: '张师傅', remark: '检测完成', diagnosisResult: '日差+5秒，状态良好', estimatedCost: 200, createTime: '2024-06-01 15:00' },
+      { id: 'sl10', fromStatus: '维修中', toStatus: '待取件', operator: '张师傅', remark: '检测完成，可取件', createTime: '2024-06-02 11:00' },
+      { id: 'sl11', fromStatus: '待取件', toStatus: '已完成', operator: '前台小刘', remark: '客户已取件', createTime: '2024-06-03 14:00' },
+    ],
   },
   {
     id: 'RX-2024-005',
@@ -301,6 +324,14 @@ export const mockRepairRecords: RepairRecord[] = [
     receiveDate: '2024-05-28',
     completeDate: '2024-06-10',
     technician: '李师傅',
+    pickupNotified: '已通知',
+    statusLogs: [
+      { id: 'sl12', fromStatus: '待接收', toStatus: '待接收', operator: '前台小刘', remark: '创建维修工单', createTime: '2024-05-28 09:00' },
+      { id: 'sl13', fromStatus: '待接收', toStatus: '检测中', operator: '李师傅', remark: '开始检测', createTime: '2024-05-28 14:00' },
+      { id: 'sl14', fromStatus: '检测中', toStatus: '维修中', operator: '李师傅', remark: '确认翻新方案', diagnosisResult: '外观磨损严重，需要全面抛光', estimatedCost: 2000, createTime: '2024-05-29 10:00' },
+      { id: 'sl15', fromStatus: '维修中', toStatus: '待取件', operator: '李师傅', remark: '翻新完成', createTime: '2024-06-10 16:00' },
+      { id: 'sl16', fromStatus: '待取件', toStatus: '待取件', remark: '发送取件通知，方式：短信', createTime: '2024-06-11 10:00' },
+    ],
   },
 ];
 

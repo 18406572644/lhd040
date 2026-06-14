@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   Button,
   Tag,
@@ -14,6 +14,9 @@ import {
   InputNumber,
   Input,
   Space,
+  Alert,
+  Steps,
+  Radio,
 } from '@arco-design/web-react';
 import {
   IconArrowLeft,
@@ -24,6 +27,11 @@ import {
   IconDelete,
   IconCamera,
   IconEye,
+  IconCheckCircleFill,
+  IconCloseCircleFill,
+  IconExclamationCircleFill,
+  IconSync,
+  IconSend,
 } from '@arco-design/web-react/icon';
 import { useParams, useNavigate } from 'react-router-dom';
 import { SteampunkCard } from '@/components/SteampunkCard';
@@ -31,11 +39,146 @@ import { ImageCompare } from '@/components/ImageCompare';
 import { mockParts, mockCustomers, mockClocks } from '@/mock/data';
 import { useRepairStore } from '@/store/repairStore';
 import { fileToBase64 } from '@/utils/image';
-import type { RepairPart } from '@/types';
+import type { RepairPart, RepairStatusType, RepairStatusLog } from '@/types';
 
 const TabPane = Tabs.TabPane;
 const FormItem = Form.Item;
 const Option = Select.Option;
+
+const STATUS_STEP_MAP: Record<string, number> = {
+  '待接收': 0,
+  '检测中': 1,
+  '维修中': 2,
+  '待取件': 3,
+  '已完成': 4,
+};
+
+const getStatusColor = (status: string) => {
+  const colorMap: Record<string, string> = {
+    '待接收': 'gold',
+    '检测中': 'blue',
+    '维修中': 'orange',
+    '待取件': 'cyan',
+    '已完成': 'green',
+    '已取消': 'gray',
+  };
+  return colorMap[status] || 'gray';
+};
+
+const getPriorityColor = (priority: string) => {
+  const colorMap: Record<string, string> = {
+    '低': 'green',
+    '中': 'blue',
+    '高': 'orange',
+    '紧急': 'red',
+  };
+  return colorMap[priority] || 'gray';
+};
+
+const getStatusIcon = (fromStatus: RepairStatusType, toStatus: RepairStatusType) => {
+  if (toStatus === '已取消') return <IconCloseCircleFill style={{ color: 'rgb(var(--danger-6))', fontSize: 20 }} />;
+  if (fromStatus === toStatus) return <IconExclamationCircleFill style={{ color: 'rgb(var(--warning-6))', fontSize: 20 }} />;
+  return <IconCheckCircleFill style={{ color: 'rgb(var(--success-6))', fontSize: 20 }} />;
+};
+
+const getStatusLogTitle = (log: RepairStatusLog) => {
+  if (log.fromStatus === log.toStatus) {
+    if (log.toStatus === '待接收') return '创建工单';
+    return log.remark || '操作记录';
+  }
+  if (log.toStatus === '已取消') return `取消工单（从 ${log.fromStatus}）`;
+  return `${log.fromStatus} → ${log.toStatus}`;
+};
+
+const FlowTimeline: React.FC<{ logs: RepairStatusLog[] }> = ({ logs }) => {
+  if (!logs || logs.length === 0) {
+    return <Empty description="暂无流程记录" style={{ padding: '40px 0' }} />;
+  }
+
+  return (
+    <div style={{ padding: '16px 0' }}>
+      {logs.map((log, index) => {
+        const isLast = index === logs.length - 1;
+        return (
+          <div
+            key={log.id}
+            style={{
+              display: 'flex',
+              gap: '16px',
+              paddingBottom: isLast ? 0 : '24px',
+              position: 'relative',
+            }}
+          >
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0, width: 24 }}>
+              {getStatusIcon(log.fromStatus, log.toStatus)}
+              {!isLast && (
+                <div
+                  style={{
+                    width: 2,
+                    flex: 1,
+                    background: 'linear-gradient(to bottom, var(--color-brass-dark), var(--color-border))',
+                    marginTop: 4,
+                  }}
+                />
+              )}
+            </div>
+            <div style={{ flex: 1, minWidth: 0, paddingTop: 1 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                <span style={{ color: 'var(--color-text-primary)', fontWeight: 500, fontSize: 14 }}>
+                  {getStatusLogTitle(log)}
+                </span>
+                <span style={{ color: 'var(--color-text-muted)', fontSize: 12, flexShrink: 0, marginLeft: 12 }}>
+                  {log.createTime}
+                </span>
+              </div>
+              {log.operator && (
+                <div style={{ color: 'var(--color-brass-light)', fontSize: 12, marginBottom: 4 }}>
+                  操作人：{log.operator}
+                </div>
+              )}
+              {log.remark && log.fromStatus !== log.toStatus && (
+                <div style={{ color: 'var(--color-text-muted)', fontSize: 13, marginBottom: 4 }}>
+                  {log.remark}
+                </div>
+              )}
+              {log.fromStatus === log.toStatus && log.remark && log.toStatus !== '待接收' && (
+                <div style={{ color: 'var(--color-text-muted)', fontSize: 13, marginBottom: 4 }}>
+                  {log.remark}
+                </div>
+              )}
+              {log.diagnosisResult && (
+                <div style={{
+                  background: 'rgba(107, 142, 35, 0.1)',
+                  borderRadius: 4,
+                  padding: '8px 12px',
+                  marginTop: 4,
+                  borderLeft: '3px solid var(--color-success)',
+                }}>
+                  <div style={{ color: 'var(--color-text-muted)', fontSize: 12, marginBottom: 2 }}>诊断结果</div>
+                  <div style={{ color: 'var(--color-text-primary)', fontSize: 13 }}>{log.diagnosisResult}</div>
+                </div>
+              )}
+              {log.estimatedCost != null && (
+                <div style={{
+                  background: 'rgba(218, 165, 32, 0.1)',
+                  borderRadius: 4,
+                  padding: '8px 12px',
+                  marginTop: 4,
+                  borderLeft: '3px solid var(--color-warning)',
+                }}>
+                  <div style={{ color: 'var(--color-text-muted)', fontSize: 12, marginBottom: 2 }}>预估费用</div>
+                  <div style={{ color: 'var(--color-brass-light)', fontSize: 15, fontWeight: 'bold', fontFamily: 'var(--font-family-title)' }}>
+                    ¥{log.estimatedCost}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
 
 const RepairDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -43,21 +186,30 @@ const RepairDetail: React.FC = () => {
   const repair = useRepairStore((state) => state.getRepair(id || ''));
   const addPart = useRepairStore((state) => state.addPart);
   const removePart = useRepairStore((state) => state.removePart);
-  const updateStatus = useRepairStore((state) => state.updateStatus);
+  const transitionStatus = useRepairStore((state) => state.transitionStatus);
+  const getAllowedTransitions = useRepairStore((state) => state.getAllowedTransitions);
   const uploadPhoto = useRepairStore((state) => state.uploadPhoto);
   const getPhotos = useRepairStore((state) => state.getPhotos);
   const deletePhoto = useRepairStore((state) => state.deletePhoto);
+  const sendPickupNotify = useRepairStore((state) => state.sendPickupNotify);
 
   const [partModalVisible, setPartModalVisible] = useState(false);
   const [partForm] = Form.useForm();
   const [statusModalVisible, setStatusModalVisible] = useState(false);
-  const [newStatus, setNewStatus] = useState('');
+  const [pickupNotifyModalVisible, setPickupNotifyModalVisible] = useState(false);
+  const [statusForm] = Form.useForm();
+  const [pickupForm] = Form.useForm();
   const [previewVisible, setPreviewVisible] = useState(false);
   const [previewUrl, setPreviewUrl] = useState('');
   const [uploading, setUploading] = useState(false);
 
   const beforePhotos = getPhotos(repair?.id || '', 'before');
   const afterPhotos = getPhotos(repair?.id || '', 'after');
+
+  const allowedTransitions = useMemo(() => {
+    if (!repair) return [];
+    return getAllowedTransitions(repair.status);
+  }, [repair, getAllowedTransitions]);
 
   if (!repair) {
     return (
@@ -67,27 +219,8 @@ const RepairDetail: React.FC = () => {
     );
   }
 
-  const getStatusColor = (status: string) => {
-    const colorMap: Record<string, string> = {
-      待接收: 'gold',
-      检测中: 'blue',
-      维修中: 'orange',
-      待取件: 'cyan',
-      已完成: 'green',
-      已取消: 'gray',
-    };
-    return colorMap[status] || 'gray';
-  };
-
-  const getPriorityColor = (priority: string) => {
-    const colorMap: Record<string, string> = {
-      低: 'green',
-      中: 'blue',
-      高: 'orange',
-      紧急: 'red',
-    };
-    return colorMap[priority] || 'gray';
-  };
+  const isCancelled = repair.status === '已取消';
+  const isCompleted = repair.status === '已完成';
 
   const handleAddPart = async () => {
     try {
@@ -202,15 +335,40 @@ const RepairDetail: React.FC = () => {
 
   const totalPartsCost = repair.partsUsed.reduce((sum, p) => sum + p.totalPrice, 0);
 
-  const statusList = ['待接收', '检测中', '维修中', '待取件', '已完成', '已取消'];
+  const handleStatusTransition = async () => {
+    try {
+      const values = await statusForm.validate();
+      const targetStatus = values.targetStatus as RepairStatusType;
 
-  const handleStatusUpdate = () => {
-    if (newStatus) {
-      updateStatus(repair.id, newStatus as any);
-      Message.success(`状态已更新为：${newStatus}`);
-      setStatusModalVisible(false);
-      setNewStatus('');
-    }
+      try {
+        transitionStatus(repair.id, {
+          status: targetStatus,
+          remark: values.remark,
+          diagnosisResult: values.diagnosisResult,
+          estimatedCost: values.estimatedCost,
+          operator: values.operator,
+        });
+        Message.success(`状态已更新为：${targetStatus}`);
+        setStatusModalVisible(false);
+        statusForm.resetFields();
+      } catch (err: any) {
+        Message.error(err.message || '状态变更失败');
+      }
+    } catch {}
+  };
+
+  const handleSendPickupNotify = async () => {
+    try {
+      const values = await pickupForm.validate();
+      try {
+        sendPickupNotify(repair.id, values.notifyMethod, values.message);
+        Message.success('取件通知已发送');
+        setPickupNotifyModalVisible(false);
+        pickupForm.resetFields();
+      } catch (err: any) {
+        Message.error(err.message || '发送通知失败');
+      }
+    } catch {}
   };
 
   const customerData = mockCustomers.find((c) => c.id === repair.customerId);
@@ -286,6 +444,8 @@ const RepairDetail: React.FC = () => {
     );
   };
 
+  const currentStep = repair.status === '已取消' ? -1 : (STATUS_STEP_MAP[repair.status] ?? 0);
+
   return (
     <>
       <div className="page-container">
@@ -294,7 +454,25 @@ const RepairDetail: React.FC = () => {
             返回列表
           </Button>
           <Space style={{ marginLeft: 'auto' }}>
-            <Button onClick={() => setStatusModalVisible(true)}>更新状态</Button>
+            {repair.status === '待取件' && (
+              <Button
+                type="outline"
+                icon={<IconSend />}
+                onClick={() => setPickupNotifyModalVisible(true)}
+                style={{ borderColor: 'var(--color-brass-light)', color: 'var(--color-brass-light)' }}
+              >
+                发送取件通知
+              </Button>
+            )}
+            {!isCompleted && !isCancelled && (
+              <Button
+                icon={<IconSync />}
+                onClick={() => setStatusModalVisible(true)}
+                style={{ borderColor: 'var(--color-brass-dark)', color: 'var(--color-brass-dark)' }}
+              >
+                变更状态
+              </Button>
+            )}
             <Button type="primary" className="steampunk-btn">
               保存
             </Button>
@@ -328,6 +506,9 @@ const RepairDetail: React.FC = () => {
                     {repair.status}
                   </Tag>
                   <Tag color={getPriorityColor(repair.priority)}>{repair.priority}优先级</Tag>
+                  {repair.pickupNotified && (
+                    <Tag color='purple' icon={<IconSend />}>已通知取件</Tag>
+                  )}
                 </div>
               </div>
             </div>
@@ -341,6 +522,23 @@ const RepairDetail: React.FC = () => {
               </div>
             </div>
           </div>
+
+          {repair.status !== '已取消' && (
+            <div style={{ marginTop: '20px' }}>
+              <Steps
+                current={currentStep}
+                size="small"
+                lineless={false}
+                style={{ padding: '0 20px' }}
+              >
+                <Steps.Step title="待接收" />
+                <Steps.Step title="检测中" />
+                <Steps.Step title="维修中" />
+                <Steps.Step title="待取件" />
+                <Steps.Step title="已完成" />
+              </Steps>
+            </div>
+          )}
         </SteampunkCard>
 
         <div style={{ marginTop: '20px' }}>
@@ -373,6 +571,7 @@ const RepairDetail: React.FC = () => {
                         onClick={() => navigate(`/customers/${repair.customerId}`)}
                       >
                         {customerData?.name || repair.customerName}
+                        {customerData?.phone && ` (${customerData.phone})`}
                       </span>
                     ),
                   },
@@ -392,13 +591,18 @@ const RepairDetail: React.FC = () => {
                 </div>
               </div>
 
-              {repair.diagnosis && (
+              {(repair.diagnosisResult || repair.diagnosis) && (
                 <>
                   <div className="divider-brass" style={{ margin: '20px 0' }}></div>
                   <div>
                     <h4 style={{ color: 'var(--color-brass-light)', marginBottom: '12px' }}>检测结果</h4>
                     <div style={{ color: 'var(--color-text-primary)', padding: '12px', background: 'rgba(107, 142, 35, 0.1)', borderRadius: '6px', borderLeft: '3px solid var(--color-success)' }}>
-                      {repair.diagnosis}
+                      {repair.diagnosisResult || repair.diagnosis}
+                      {repair.estimatedCost != null && (
+                        <div style={{ marginTop: '8px', color: 'var(--color-brass-light)', fontWeight: 'bold' }}>
+                          预估费用：¥{repair.estimatedCost}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </>
@@ -427,6 +631,16 @@ const RepairDetail: React.FC = () => {
                   </div>
                 </>
               )}
+              </TabPane>
+
+              <TabPane key="timeline" title={`流程轨迹 (${repair.statusLogs?.length || 0})`}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                  <h4 style={{ color: 'var(--color-brass-light)', margin: 0 }}>工单流转记录</h4>
+                  <Tag color={getStatusColor(repair.status)} size="large">
+                    当前状态：{repair.status}
+                  </Tag>
+                </div>
+                <FlowTimeline logs={repair.statusLogs || []} />
               </TabPane>
 
               <TabPane key="parts" title={`使用零件 (${repair.partsUsed.length})`}>
@@ -533,32 +747,134 @@ const RepairDetail: React.FC = () => {
       </Modal>
 
       <Modal
-        title="更新状态"
+        title="变更状态"
         visible={statusModalVisible}
-        onOk={handleStatusUpdate}
-        onCancel={() => setStatusModalVisible(false)}
-        okText="确定"
+        onOk={handleStatusTransition}
+        onCancel={() => { setStatusModalVisible(false); statusForm.resetFields(); }}
+        okText="确认变更"
+        cancelText="取消"
+        style={{ width: 520 }}
+      >
+        <Alert
+          type="info"
+          style={{ marginBottom: '16px' }}
+          content={`当前状态：${repair.status}。仅允许变更为以下状态：${allowedTransitions.join('、') || '无（终态）'}`}
+        />
+        {allowedTransitions.length === 0 ? (
+          <Empty description="当前状态不可变更" style={{ padding: '20px 0' }} />
+        ) : (
+          <Form form={statusForm} layout="vertical">
+            <FormItem
+              field="targetStatus"
+              label="目标状态"
+              rules={[{ required: true, message: '请选择目标状态' }]}
+            >
+              <Radio.Group>
+                {allowedTransitions.map((s) => (
+                  <Radio key={s} value={s}>
+                    <Tag color={getStatusColor(s)}>{s}</Tag>
+                  </Radio>
+                ))}
+              </Radio.Group>
+            </FormItem>
+
+            <FormItem
+              field="operator"
+              label="操作人"
+            >
+              <Select placeholder="请选择操作人" allowClear>
+                <Option value="张师傅">张师傅</Option>
+                <Option value="李师傅">李师傅</Option>
+                <Option value="王师傅">王师傅</Option>
+                <Option value="前台小刘">前台小刘</Option>
+              </Select>
+            </FormItem>
+
+            <FormItem
+              field="remark"
+              label="备注"
+              rules={[{ required: true, message: '请填写状态变更备注' }]}
+            >
+              <Input.TextArea placeholder="请填写状态变更原因或备注" rows={3} maxLength={200} showWordLimit />
+            </FormItem>
+
+            <Form.Item noStyle shouldUpdate>
+              {(values) => {
+                if (values.targetStatus === '维修中' && repair.status === '检测中') {
+                  return (
+                    <>
+                      <Alert
+                        type="warning"
+                        style={{ marginBottom: '12px' }}
+                        content="检测中流转到维修中，必须填写诊断结果和预估费用"
+                      />
+                      <FormItem
+                        field="diagnosisResult"
+                        label="诊断结果"
+                        rules={[{ required: true, message: '请填写诊断结果' }]}
+                      >
+                        <Input.TextArea placeholder="请填写详细的诊断结果" rows={3} maxLength={500} showWordLimit />
+                      </FormItem>
+                      <FormItem
+                        field="estimatedCost"
+                        label="预估费用 (¥)"
+                        rules={[{ required: true, message: '请填写预估费用' }]}
+                      >
+                        <InputNumber
+                          min={0}
+                          precision={2}
+                          placeholder="请填写预估费用"
+                          style={{ width: '100%' }}
+                        />
+                      </FormItem>
+                    </>
+                  );
+                }
+                return null;
+              }}
+            </Form.Item>
+          </Form>
+        )}
+      </Modal>
+
+      <Modal
+        title="发送取件通知"
+        visible={pickupNotifyModalVisible}
+        onOk={handleSendPickupNotify}
+        onCancel={() => { setPickupNotifyModalVisible(false); pickupForm.resetFields(); }}
+        okText="发送通知"
         cancelText="取消"
       >
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-          {statusList.map((s) => (
-            <Tag
-              key={s}
-              color={getStatusColor(s)}
-              size="large"
-              style={{
-                cursor: 'pointer',
-                padding: '8px 16px',
-                fontSize: '14px',
-                opacity: newStatus === s ? 1 : 0.7,
-                borderWidth: newStatus === s ? '2px' : '1px',
-              }}
-              onClick={() => setNewStatus(s)}
-            >
-              {s}
-            </Tag>
-          ))}
-        </div>
+        <Alert
+          type="info"
+          style={{ marginBottom: '16px' }}
+          content={`将通知客户 ${repair.customerName} 前来取件`}
+        />
+        <Form form={pickupForm} layout="vertical" initialValues={{ notifyMethod: '短信' }}>
+          <FormItem
+            field="notifyMethod"
+            label="通知方式"
+            rules={[{ required: true, message: '请选择通知方式' }]}
+          >
+            <Radio.Group>
+              <Radio value="短信">短信</Radio>
+              <Radio value="电话">电话</Radio>
+              <Radio value="微信">微信</Radio>
+              <Radio value="邮件">邮件</Radio>
+            </Radio.Group>
+          </FormItem>
+          <FormItem
+            field="message"
+            label="附加消息"
+          >
+            <Input.TextArea
+              placeholder="可选填附加消息，将随通知一并发送"
+              rows={3}
+              maxLength={200}
+              showWordLimit
+            />
+          </FormItem>
+        </Form>
       </Modal>
 
       <Modal

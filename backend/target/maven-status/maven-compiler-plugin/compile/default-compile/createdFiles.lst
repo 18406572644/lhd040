@@ -30,7 +30,7 @@ com\example\watchrepair\controller\AuthController.class
 com\example\watchrepair\entity\PhotoType.class
 com\example\watchrepair\entity\RepairStatus.class
 com\example\watchrepair\repository\CustomerRepository.class
-com\example\watchrepair\controller\RepairRecordController.class
+com\example\watchrepair\service\RepairRecordService$1.class
 com\example\watchrepair\entity\MaintenanceReminder.class
 com\example\watchrepair\security\SecurityConfig.class
 com\example\watchrepair\config\WebMvcConfig.class
@@ -40,7 +40,6 @@ com\example\watchrepair\entity\Customer.class
 com\example\watchrepair\service\MaintenanceReminderService.class
 com\example\watchrepair\security\UserDetailsServiceImpl.class
 com\example\watchrepair\service\PartService.class
-com\example\watchrepair\service\RepairRecordService.class
 com\example\watchrepair\controller\CustomerController.class
 com\example\watchrepair\repository\PartRepository.class
 com\example\watchrepair\config\CorsConfig.class

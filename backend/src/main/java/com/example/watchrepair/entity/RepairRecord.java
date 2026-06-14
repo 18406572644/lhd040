@@ -46,6 +46,23 @@ public class RepairRecord {
     @Column(columnDefinition = "text")
     private String notes;
 
+    @Column(columnDefinition = "text")
+    private String diagnosisResult;
+
+    @Column(precision = 10, scale = 2)
+    private BigDecimal estimatedCost;
+
+    @Column(length = 50)
+    private String assignedTechnician;
+
+    @Column(length = 20)
+    private String priority;
+
+    private LocalDateTime expectedEndTime;
+
+    @Column(length = 20)
+    private String pickupNotified;
+
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime createTime;
@@ -144,6 +161,54 @@ public class RepairRecord {
 
     public void setNotes(String notes) {
         this.notes = notes;
+    }
+
+    public String getDiagnosisResult() {
+        return diagnosisResult;
+    }
+
+    public void setDiagnosisResult(String diagnosisResult) {
+        this.diagnosisResult = diagnosisResult;
+    }
+
+    public BigDecimal getEstimatedCost() {
+        return estimatedCost;
+    }
+
+    public void setEstimatedCost(BigDecimal estimatedCost) {
+        this.estimatedCost = estimatedCost;
+    }
+
+    public String getAssignedTechnician() {
+        return assignedTechnician;
+    }
+
+    public void setAssignedTechnician(String assignedTechnician) {
+        this.assignedTechnician = assignedTechnician;
+    }
+
+    public String getPriority() {
+        return priority;
+    }
+
+    public void setPriority(String priority) {
+        this.priority = priority;
+    }
+
+    public LocalDateTime getExpectedEndTime() {
+        return expectedEndTime;
+    }
+
+    public void setExpectedEndTime(LocalDateTime expectedEndTime) {
+        this.expectedEndTime = expectedEndTime;
+    }
+
+    public String getPickupNotified() {
+        return pickupNotified;
+    }
+
+    public void setPickupNotified(String pickupNotified) {
+        this.pickupNotified = pickupNotified;
     }
 
     public LocalDateTime getCreateTime() {
