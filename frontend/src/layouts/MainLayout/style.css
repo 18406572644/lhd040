@@ -1,0 +1,96 @@
+.main-layout {
+  min-height: 100vh;
+}
+
+.steampunk-sider {
+  background: var(--color-bg-secondary) !important;
+  border-right: 2px solid var(--color-border) !important;
+  position: relative;
+}
+
+.steampunk-sider .arco-menu {
+  background: transparent !important;
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 60px;
+  padding: 0 16px;
+  margin-top: 12px;
+}
+
+.logo-icon {
+  font-size: 28px;
+  color: var(--color-brass-light);
+  text-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
+  animation: rotate 20s linear infinite;
+}
+
+.logo-text {
+  font-family: var(--font-family-title);
+  font-size: 20px;
+  font-weight: bold;
+  color: var(--color-brass-light);
+  margin-left: 10px;
+  letter-spacing: 2px;
+  text-shadow: 0 0 8px rgba(212, 175, 55, 0.4);
+}
+
+.sider-divider {
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--color-brass-dark), transparent);
+  margin: 12px 16px;
+}
+
+.steampunk-header {
+  background: var(--color-bg-secondary) !important;
+  border-bottom: 2px solid var(--color-border) !important;
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  height: 64px;
+}
+
+.main-content {
+  padding: 24px;
+  background: var(--color-bg-primary);
+  min-height: calc(100vh - 64px - 48px);
+}
+
+.steampunk-footer {
+  background: var(--color-bg-secondary) !important;
+  border-top: 2px solid var(--color-border) !important;
+  color: var(--color-text-muted) !important;
+  text-align: center;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  font-size: 12px;
+}
+
+.arco-menu-vertical .arco-menu-item {
+  color: var(--color-text-muted) !important;
+  transition: all var(--transition-fast) !important;
+  margin: 4px 8px;
+  border-radius: var(--border-radius-sm) !important;
+}
+
+.arco-menu-vertical .arco-menu-item:hover {
+  color: var(--color-brass-light) !important;
+  background: rgba(212, 175, 55, 0.1) !important;
+}
+
+.arco-menu-vertical .arco-menu-item.arco-menu-selected {
+  color: var(--color-brass-light) !important;
+  background: rgba(212, 175, 55, 0.15) !important;
+  border-left: 3px solid var(--color-brass-light);
+  border-radius: 0 var(--border-radius-sm) var(--border-radius-sm) 0;
+}
+
+.arco-menu-vertical .arco-menu-item .arco-icon {
+  font-size: 18px;
+}

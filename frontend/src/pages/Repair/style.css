@@ -1,0 +1,73 @@
+.step-content {
+  padding: 20px 0;
+}
+
+.arco-steps-item-icon {
+  background: var(--color-bg-tertiary) !important;
+  border-color: var(--color-border) !important;
+  color: var(--color-text-muted) !important;
+}
+
+.arco-steps-item-process .arco-steps-item-icon {
+  background: var(--color-brass-dark) !important;
+  border-color: var(--color-brass-light) !important;
+  color: var(--color-gray-dark) !important;
+}
+
+.arco-steps-item-finish .arco-steps-item-icon {
+  background: var(--color-success) !important;
+  border-color: var(--color-success) !important;
+  color: white !important;
+}
+
+.arco-steps-item-title {
+  color: var(--color-text-muted) !important;
+}
+
+.arco-steps-item-process .arco-steps-item-title {
+  color: var(--color-brass-light) !important;
+}
+
+.arco-steps-item-description {
+  color: var(--color-text-muted) !important;
+}
+
+.arco-card {
+  background: var(--color-bg-secondary) !important;
+  border: 1px solid var(--color-border) !important;
+}
+
+.arco-card-header {
+  border-bottom: 1px solid var(--color-border) !important;
+  color: var(--color-brass-light) !important;
+}
+
+.arco-radio-button {
+  background: var(--color-bg-tertiary) !important;
+  border-color: var(--color-border) !important;
+  color: var(--color-text-primary) !important;
+}
+
+.arco-radio-button:hover {
+  border-color: var(--color-brass-dark) !important;
+}
+
+.arco-radio-button-checked {
+  background: var(--color-brass-dark) !important;
+  border-color: var(--color-brass-light) !important;
+  color: var(--color-gray-dark) !important;
+}
+
+.arco-upload-list-item {
+  background: var(--color-bg-secondary) !important;
+  border: 1px solid var(--color-border) !important;
+}
+
+.arco-upload-picture-card {
+  background: var(--color-bg-secondary) !important;
+  border: 2px dashed var(--color-border) !important;
+}
+
+.arco-upload-picture-card:hover {
+  border-color: var(--color-brass-light) !important;
+}
