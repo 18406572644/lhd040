@@ -58,6 +58,7 @@ com\example\watchrepair\service\PartService.class
 com\example\watchrepair\service\RepairRecordService.class
 com\example\watchrepair\controller\CustomerController.class
 com\example\watchrepair\repository\PartRepository.class
+com\example\watchrepair\config\DataInitializer.class
 com\example\watchrepair\config\CorsConfig.class
 com\example\watchrepair\service\SettlementService.class
 com\example\watchrepair\dto\PaymentRequest.class

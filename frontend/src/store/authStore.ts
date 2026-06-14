@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { mockUsers } from '@/mock/data';
+import { authApi } from '@/api/auth';
 
 interface User {
   id: string;
@@ -18,55 +18,53 @@ interface AuthState {
   logout: () => void;
 }
 
-const generateUserFromUsername = (username: string): User => {
-  const matchedUser = mockUsers.find((u) => u.username.toLowerCase() === username.toLowerCase());
-  if (matchedUser) {
-    return {
-      id: matchedUser.id,
-      username: matchedUser.username,
-      name: matchedUser.name,
-      role: matchedUser.role,
-    };
-  }
-  const role = username.toLowerCase().includes('admin') ? 'admin'
-    : username.toLowerCase().includes('manager') ? 'manager'
-    : username.toLowerCase().includes('tech') ? 'technician'
-    : username.toLowerCase().includes('reception') ? 'receptionist'
-    : 'technician';
-  return {
-    id: String(Date.now()),
-    username,
-    name: username,
-    role,
-  };
+const ROLE_LABEL_MAP: Record<string, string> = {
+  ADMIN: 'admin',
+  TECHNICIAN: 'technician',
+  RECEPTIONIST: 'receptionist',
+  MANAGER: 'manager',
 };
 
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       user: null,
       token: null,
       isAuthenticated: false,
 
       login: async (username: string, password: string) => {
-        await new Promise((resolve) => setTimeout(resolve, 500));
+        try {
+          const res = await authApi.login({ username, password });
 
-        if (username && password.length >= 3) {
-          const user = generateUserFromUsername(username.trim());
-          const token = 'mock-token-' + Date.now() + '-' + Math.random().toString(36).substring(2, 10);
-          set({
-            user,
-            token,
-            isAuthenticated: true,
-          });
-          return true;
+          if (res.code === 0 && res.data) {
+            const { token, username: uname, role, realName } = res.data;
+            const normalizedRole = ROLE_LABEL_MAP[role] || role.toLowerCase();
+
+            const user: User = {
+              id: String(Date.now()),
+              username: uname,
+              name: realName || uname,
+              role: normalizedRole,
+            };
+
+            set({
+              user,
+              token,
+              isAuthenticated: true,
+            });
+
+            return true;
+          }
+
+          return false;
+        } catch (error: any) {
+          const msg = error?.response?.data?.message || error?.message || '登录失败';
+          console.error('登录失败:', msg);
+          return false;
         }
-        return false;
       },
 
       logout: () => {
-        localStorage.removeItem('auth-storage');
-        sessionStorage.clear();
         set({
           user: null,
           token: null,
@@ -76,16 +74,12 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: 'auth-storage',
-      version: 2,
-      migrate: (persistedState: any, version) => {
-        if (version < 2) {
-          return {
-            ...persistedState,
-            user: persistedState?.user ? generateUserFromUsername(persistedState.user.username) : null,
-          };
-        }
-        return persistedState;
-      },
+      version: 3,
+      partialize: (state) => ({
+        user: state.user,
+        token: state.token,
+        isAuthenticated: state.isAuthenticated,
+      }),
     }
   )
 );

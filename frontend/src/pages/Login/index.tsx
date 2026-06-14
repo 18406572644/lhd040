@@ -62,7 +62,7 @@ const Login: React.FC = () => {
             layout="vertical"
             className="login-form"
             onSubmit={handleSubmit}
-            initialValues={{ username: 'admin', password: '123456', remember: true }}
+            initialValues={{ username: 'admin', password: 'admin123', remember: true }}
           >
             <FormItem
               field="username"
@@ -109,7 +109,7 @@ const Login: React.FC = () => {
           </Form>
 
           <div className="login-footer">
-            <p className="tip-text">提示：任意用户名 + 3位以上密码即可登录</p>
+            <p className="tip-text">管理员：admin / admin123 | 技师：tech_zhang / 123456</p>
             <div className="footer-decor">
               <span>⚙</span>
               <span>精工技艺 · 传承百年</span>

@@ -40,6 +40,7 @@ D:\lhd040\backend\src\main\java\com\example\watchrepair\WatchRepairApplication.j
 D:\lhd040\backend\src\main\java\com\example\watchrepair\repository\MaintenanceReminderRepository.java
 D:\lhd040\backend\src\main\java\com\example\watchrepair\repository\RepairPartRepository.java
 D:\lhd040\backend\src\main\java\com\example\watchrepair\dto\LoginResponse.java
+D:\lhd040\backend\src\main\java\com\example\watchrepair\config\DataInitializer.java
 D:\lhd040\backend\src\main\java\com\example\watchrepair\controller\AuthController.java
 D:\lhd040\backend\src\main\java\com\example\watchrepair\entity\Customer.java
 D:\lhd040\backend\src\main\java\com\example\watchrepair\repository\RepairPhotoRepository.java
