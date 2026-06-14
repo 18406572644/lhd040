@@ -101,11 +101,11 @@ export const useSettlementStore = create<SettlementState>()(
 
       fetchAllSettlements: async () => {
         try {
-          const res = await settlementApi.getAllSettlements();
-          if (res.code === 0 && res.data) {
+          const res: any = await settlementApi.getAllSettlements();
+          if ((res.code === 0 || res.code === 200) && res.data) {
             set({ allSettlements: res.data });
             const settlementMap: Record<string, Settlement> = {};
-            res.data.forEach((s) => {
+            res.data.forEach((s: any) => {
               if (s.repairId) {
                 settlementMap[String(s.repairId)] = s as any;
               }
@@ -121,8 +121,8 @@ export const useSettlementStore = create<SettlementState>()(
 
       fetchSettlementByRepairId: async (repairId) => {
         try {
-          const res = await settlementApi.getSettlementByRepairId(repairId);
-          if (res.code === 0 && res.data) {
+          const res: any = await settlementApi.getSettlementByRepairId(repairId);
+          if ((res.code === 0 || res.code === 200) && res.data) {
             set((state) => ({
               settlements: { ...state.settlements, [repairId]: res.data as any },
             }));
@@ -137,8 +137,8 @@ export const useSettlementStore = create<SettlementState>()(
 
       fetchPaymentRecords: async (repairId) => {
         try {
-          const res = await settlementApi.getPaymentRecordsByRepairId(repairId);
-          if (res.code === 0 && res.data) {
+          const res: any = await settlementApi.getPaymentRecordsByRepairId(repairId);
+          if ((res.code === 0 || res.code === 200) && res.data) {
             set((state) => ({
               paymentRecords: { ...state.paymentRecords, [repairId]: res.data as any },
             }));
@@ -150,8 +150,8 @@ export const useSettlementStore = create<SettlementState>()(
 
       fetchVoucherByRepairId: async (repairId) => {
         try {
-          const res = await settlementApi.getPickupVoucherByRepairId(repairId);
-          if (res.code === 0 && res.data) {
+          const res: any = await settlementApi.getPickupVoucherByRepairId(repairId);
+          if ((res.code === 0 || res.code === 200) && res.data) {
             set((state) => ({
               vouchers: { ...state.vouchers, [repairId]: res.data as any },
             }));
@@ -167,7 +167,7 @@ export const useSettlementStore = create<SettlementState>()(
           return existing;
         }
 
-        const res = await settlementApi.createSettlement({
+        const res: any = await settlementApi.createSettlement({
           repairId: Number(repairId),
           discount: discount || 0,
           discountReason,
@@ -175,7 +175,7 @@ export const useSettlementStore = create<SettlementState>()(
           operator,
         });
 
-        if (res.code !== 0 || !res.data) {
+        if (!(res.code === 0 || res.code === 200) || !res.data) {
           throw new Error(res.message || '结算单生成失败');
         }
 
@@ -209,7 +209,7 @@ export const useSettlementStore = create<SettlementState>()(
           ? Number(repairId)
           : Number(settlementId) || Number(repairId);
 
-        const res = await settlementApi.processPayment({
+        const res: any = await settlementApi.processPayment({
           settlementId: Number(settlement.id) || sid,
           paymentMethod: method,
           amount,
@@ -218,16 +218,16 @@ export const useSettlementStore = create<SettlementState>()(
           remark,
         });
 
-        if (res.code !== 0 || !res.data) {
+        if (!(res.code === 0 || res.code === 200) || !res.data) {
           throw new Error(res.message || '支付失败');
         }
 
         const paymentRecord = res.data;
         const existingRecords = get().paymentRecords[repairId] || [];
 
-        const updatedRes = await settlementApi.getSettlementByRepairId(repairId);
+        const updatedRes: any = await settlementApi.getSettlementByRepairId(repairId);
         let updatedSettlement = settlement;
-        if (updatedRes.code === 0 && updatedRes.data) {
+        if ((updatedRes.code === 0 || updatedRes.code === 200) && updatedRes.data) {
           updatedSettlement = updatedRes.data as any;
         } else {
           const newPaidAmount = (settlement.paidAmount || 0) + amount;
@@ -273,7 +273,7 @@ export const useSettlementStore = create<SettlementState>()(
           ? Number(repairId)
           : Number(settlementId) || Number(repairId);
 
-        const res = await settlementApi.confirmPickup({
+        const res: any = await settlementApi.confirmPickup({
           repairId: Number(repairId),
           settlementId: Number(settlement.id) || sid,
           customerSignature: signature,
@@ -281,7 +281,7 @@ export const useSettlementStore = create<SettlementState>()(
           operator,
         });
 
-        if (res.code !== 0 || !res.data) {
+        if (!(res.code === 0 || res.code === 200) || !res.data) {
           throw new Error(res.message || '取件确认失败');
         }
 

@@ -24,49 +24,29 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        if (!sysUserRepository.existsByUsername("admin")) {
-            SysUser admin = new SysUser();
-            admin.setUsername("admin");
-            admin.setPassword(passwordEncoder.encode("admin123"));
-            admin.setRole(Role.ADMIN);
-            admin.setRealName("系统管理员");
-            admin.setPhone("13800000001");
-            admin.setEmail("admin@clockrepair.com");
-            sysUserRepository.save(admin);
-            log.info("已初始化管理员账号: admin / admin123");
-        }
+        createUserIfNotExists("admin", "admin123", Role.ADMIN, "系统管理员", "13800000001", "admin@clockrepair.com");
+        createUserIfNotExists("tech_zhang", "123456", Role.TECHNICIAN, "张师傅", "13800000003", null);
+        createUserIfNotExists("receptionist", "123456", Role.RECEPTIONIST, "前台小刘", "13800000005", null);
+        createUserIfNotExists("manager", "123456", Role.MANAGER, "王经理", "13800000002", null);
+    }
 
-        if (!sysUserRepository.existsByUsername("tech_zhang")) {
-            SysUser tech = new SysUser();
-            tech.setUsername("tech_zhang");
-            tech.setPassword(passwordEncoder.encode("123456"));
-            tech.setRole(Role.TECHNICIAN);
-            tech.setRealName("张师傅");
-            tech.setPhone("13800000003");
-            sysUserRepository.save(tech);
-            log.info("已初始化技师账号: tech_zhang / 123456");
-        }
-
-        if (!sysUserRepository.existsByUsername("receptionist")) {
-            SysUser receptionist = new SysUser();
-            receptionist.setUsername("receptionist");
-            receptionist.setPassword(passwordEncoder.encode("123456"));
-            receptionist.setRole(Role.RECEPTIONIST);
-            receptionist.setRealName("前台小刘");
-            receptionist.setPhone("13800000005");
-            sysUserRepository.save(receptionist);
-            log.info("已初始化前台账号: receptionist / 123456");
-        }
-
-        if (!sysUserRepository.existsByUsername("manager")) {
-            SysUser manager = new SysUser();
-            manager.setUsername("manager");
-            manager.setPassword(passwordEncoder.encode("123456"));
-            manager.setRole(Role.MANAGER);
-            manager.setRealName("王经理");
-            manager.setPhone("13800000002");
-            sysUserRepository.save(manager);
-            log.info("已初始化经理账号: manager / 123456");
+    private void createUserIfNotExists(String username, String password, Role role, String realName, String phone, String email) {
+        try {
+            if (!sysUserRepository.existsByUsername(username)) {
+                SysUser user = new SysUser();
+                user.setUsername(username);
+                user.setPassword(passwordEncoder.encode(password));
+                user.setRole(role);
+                user.setRealName(realName);
+                user.setPhone(phone);
+                if (email != null) {
+                    user.setEmail(email);
+                }
+                sysUserRepository.save(user);
+                log.info("已初始化用户账号: {} / {}", username, password);
+            }
+        } catch (Exception e) {
+            log.warn("初始化用户 {} 失败: {}", username, e.getMessage());
         }
     }
 }

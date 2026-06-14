@@ -34,32 +34,46 @@ export const useAuthStore = create<AuthState>()(
 
       login: async (username: string, password: string) => {
         try {
-          const res = await authApi.login({ username, password });
+          const res: any = await authApi.login({ username, password });
+          console.log('[Login] 后端响应:', JSON.stringify(res));
 
-          if (res.code === 0 && res.data) {
-            const { token, username: uname, role, realName } = res.data;
-            const normalizedRole = ROLE_LABEL_MAP[role] || role.toLowerCase();
-
-            const user: User = {
-              id: String(Date.now()),
-              username: uname,
-              name: realName || uname,
-              role: normalizedRole,
-            };
-
-            set({
-              user,
-              token,
-              isAuthenticated: true,
-            });
-
-            return true;
+          const isSuccess = (res.code === 0 || res.code === 200) && (res.data || res.token);
+          if (!isSuccess) {
+            console.warn('[Login] 登录失败判断: code=', res.code, ' hasData=', !!res.data);
+            return false;
           }
 
-          return false;
+          const payload = res.data || res;
+          const token = payload.token;
+          const uname = payload.username;
+          const role = payload.role;
+          const realName = payload.realName || uname;
+
+          if (!token) {
+            console.error('[Login] 响应中没有 token:', payload);
+            return false;
+          }
+
+          const normalizedRole = ROLE_LABEL_MAP[role] || role.toLowerCase();
+
+          const user: User = {
+            id: String(Date.now()),
+            username: uname,
+            name: realName || uname,
+            role: normalizedRole,
+          };
+
+          set({
+            user,
+            token,
+            isAuthenticated: true,
+          });
+
+          console.log('[Login] 登录成功, user=', user, 'roleOriginal=', role, 'roleNormalized=', normalizedRole);
+          return true;
         } catch (error: any) {
           const msg = error?.response?.data?.message || error?.message || '登录失败';
-          console.error('登录失败:', msg);
+          console.error('[Login] 登录异常:', msg, error);
           return false;
         }
       },
