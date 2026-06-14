@@ -180,16 +180,36 @@ const FlowTimeline: React.FC<{ logs: RepairStatusLog[] }> = ({ logs }) => {
   );
 };
 
+const STATUS_FLOW: Record<string, string[]> = {
+  '待接收': ['检测中', '已取消'],
+  '检测中': ['维修中', '已取消'],
+  '维修中': ['待取件', '已取消'],
+  '待取件': ['已完成'],
+  '已完成': [],
+  '已取消': [],
+};
+
 const RepairDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const repair = useRepairStore((state) => state.getRepair(id || ''));
+
+  const repairs = useRepairStore((state) => state.repairs);
+  const repair = useMemo(() => repairs.find((r) => r.id === id), [repairs, id]);
+
+  const photosByRepair = useRepairStore((state) => state.photos[id || ''] || []);
+  const beforePhotos = useMemo(
+    () => photosByRepair.filter((p: any) => p.type === 'before'),
+    [photosByRepair]
+  );
+  const afterPhotos = useMemo(
+    () => photosByRepair.filter((p: any) => p.type === 'after'),
+    [photosByRepair]
+  );
+
   const addPart = useRepairStore((state) => state.addPart);
   const removePart = useRepairStore((state) => state.removePart);
   const transitionStatus = useRepairStore((state) => state.transitionStatus);
-  const getAllowedTransitions = useRepairStore((state) => state.getAllowedTransitions);
   const uploadPhoto = useRepairStore((state) => state.uploadPhoto);
-  const getPhotos = useRepairStore((state) => state.getPhotos);
   const deletePhoto = useRepairStore((state) => state.deletePhoto);
   const sendPickupNotify = useRepairStore((state) => state.sendPickupNotify);
 
@@ -203,13 +223,10 @@ const RepairDetail: React.FC = () => {
   const [previewUrl, setPreviewUrl] = useState('');
   const [uploading, setUploading] = useState(false);
 
-  const beforePhotos = getPhotos(repair?.id || '', 'before');
-  const afterPhotos = getPhotos(repair?.id || '', 'after');
-
   const allowedTransitions = useMemo(() => {
     if (!repair) return [];
-    return getAllowedTransitions(repair.status);
-  }, [repair, getAllowedTransitions]);
+    return STATUS_FLOW[repair.status] || [];
+  }, [repair]);
 
   if (!repair) {
     return (

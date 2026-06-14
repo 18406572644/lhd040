@@ -157,15 +157,15 @@ export const useRepairStore = create<RepairState>()(
       },
 
       transitionStatus: (id, params) => {
-        const repair = get().getRepair(id);
-        if (!repair) return;
+        const currentRepair = get().repairs.find((r) => r.id === id);
+        if (!currentRepair) return;
 
-        const allowed = STATUS_FLOW[repair.status] || [];
+        const allowed = STATUS_FLOW[currentRepair.status] || [];
         if (!allowed.includes(params.status)) {
-          throw new Error(`不允许从 [${repair.status}] 直接变更为 [${params.status}]，允许的目标状态：${allowed.join('、') || '无'}`);
+          throw new Error(`不允许从 [${currentRepair.status}] 直接变更为 [${params.status}]，允许的目标状态：${allowed.join('、') || '无'}`);
         }
 
-        if (repair.status === '检测中' && params.status === '维修中') {
+        if (currentRepair.status === '检测中' && params.status === '维修中') {
           if (!params.diagnosisResult || !params.diagnosisResult.trim()) {
             throw new Error('检测中流转到维修中时，必须填写诊断结果');
           }
@@ -176,8 +176,8 @@ export const useRepairStore = create<RepairState>()(
 
         const now = new Date();
         const log: RepairStatusLog = {
-          id: `log-${Date.now()}`,
-          fromStatus: repair.status,
+          id: `log-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+          fromStatus: currentRepair.status,
           toStatus: params.status,
           operator: params.operator,
           remark: params.remark,
@@ -186,25 +186,28 @@ export const useRepairStore = create<RepairState>()(
           createTime: formatDateTime(now),
         };
 
-        const updates: Partial<RepairRecord> = {
-          status: params.status,
-          statusLogs: [...(repair.statusLogs || []), log],
-        };
-
-        if (repair.status === '检测中' && params.status === '维修中') {
-          updates.diagnosisResult = params.diagnosisResult;
-          updates.estimatedCost = params.estimatedCost;
-        }
-
-        if (params.status === '已完成') {
-          updates.completeDate = formatDate(now);
-        }
-
-        if (params.status === '已取消') {
-          updates.completeDate = formatDate(now);
-        }
-
-        get().updateRepair(id, updates);
+        set((state) => {
+          const updatedRepairs = state.repairs.map((r) => {
+            if (r.id !== id) return r;
+            const updated: RepairRecord = {
+              ...r,
+              status: params.status,
+              statusLogs: [...(r.statusLogs || []), log],
+            };
+            if (currentRepair.status === '检测中' && params.status === '维修中') {
+              updated.diagnosisResult = params.diagnosisResult;
+              updated.estimatedCost = params.estimatedCost;
+            }
+            if (params.status === '已完成') {
+              updated.completeDate = formatDate(now);
+            }
+            if (params.status === '已取消') {
+              updated.completeDate = formatDate(now);
+            }
+            return updated;
+          });
+          return { repairs: updatedRepairs };
+        });
       },
 
       updateStatus: (id, status) => {
@@ -216,24 +219,31 @@ export const useRepairStore = create<RepairState>()(
       },
 
       sendPickupNotify: (id, method, message) => {
-        const repair = get().getRepair(id);
-        if (!repair) return;
-        if (repair.status !== '待取件') {
+        const currentRepair = get().repairs.find((r) => r.id === id);
+        if (!currentRepair) return;
+        if (currentRepair.status !== '待取件') {
           throw new Error('只有待取件状态的工单才能发送取件通知');
         }
 
         const now = new Date();
         const log: RepairStatusLog = {
-          id: `log-${Date.now()}`,
+          id: `log-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
           fromStatus: '待取件',
           toStatus: '待取件',
           remark: `发送取件通知，方式：${method}${message ? '，内容：' + message : ''}`,
           createTime: formatDateTime(now),
         };
 
-        get().updateRepair(id, {
-          pickupNotified: '已通知',
-          statusLogs: [...(repair.statusLogs || []), log],
+        set((state) => {
+          const updatedRepairs = state.repairs.map((r) => {
+            if (r.id !== id) return r;
+            return {
+              ...r,
+              pickupNotified: '已通知',
+              statusLogs: [...(r.statusLogs || []), log],
+            };
+          });
+          return { repairs: updatedRepairs };
         });
       },
 
@@ -342,13 +352,39 @@ export const useRepairStore = create<RepairState>()(
     }),
     {
       name: 'repair-storage',
-      version: 3,
+      version: 4,
       partialize: (state) => ({ repairs: state.repairs, photos: state.photos }),
       migrate: (persistedState: any, version: number) => {
+        let state = persistedState;
+
         if (version < 3) {
-          return cleanBlobUrls(persistedState);
+          state = cleanBlobUrls(state);
         }
-        return persistedState;
+
+        if (version < 4) {
+          const now = new Date();
+          const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+          state = {
+            ...state,
+            repairs: state.repairs.map((r: any) => ({
+              ...r,
+              diagnosisResult: r.diagnosisResult ?? r.diagnosis ?? '',
+              estimatedCost: r.estimatedCost,
+              pickupNotified: r.pickupNotified,
+              statusLogs: r.statusLogs && r.statusLogs.length > 0 ? r.statusLogs : [
+                {
+                  id: `log-init-${r.id}`,
+                  fromStatus: r.status,
+                  toStatus: r.status,
+                  remark: '系统初始化记录',
+                  createTime: r.receiveDate ? `${r.receiveDate} 09:00` : dateStr,
+                },
+              ],
+            })),
+          };
+        }
+
+        return state;
       },
     }
   )
