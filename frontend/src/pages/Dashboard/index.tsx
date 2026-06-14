@@ -1,5 +1,5 @@
-import React from 'react';
-import { Tag, Button, Empty } from '@arco-design/web-react';
+import React, { useState } from 'react';
+import { Tag, Button, Empty, Divider } from '@arco-design/web-react';
 import {
   IconTool,
   IconUser,
@@ -8,12 +8,25 @@ import {
   IconArrowRise,
   IconNotification,
   IconRight,
+  IconApps,
+  IconLayout,
+  IconCalendarClock,
+  IconTrophy,
+  IconUserGroup,
 } from '@arco-design/web-react/icon';
 import { useNavigate } from 'react-router-dom';
 import { SteampunkCard } from '@/components/SteampunkCard';
 import { Gauge } from '@/components/Gauge';
-import { GearDecoration } from '@/components/GearDecoration';
+import {
+  TimeRangeSelector,
+  RevenueTrendChart,
+  RepairTypePieChart,
+  RepairStatusBarChart,
+  TechnicianRankingChart,
+  CustomerDistributionChart,
+} from '@/components/Charts';
 import { mockDashboardStats, mockRepairRecords, mockReminders } from '@/mock/data';
+import type { TimeRange } from '@/types';
 import './style.css';
 
 const Dashboard: React.FC = () => {
@@ -21,6 +34,16 @@ const Dashboard: React.FC = () => {
   const stats = mockDashboardStats;
   const pendingRepairs = mockRepairRecords.filter((r) => ['待接收', '检测中', '维修中'].includes(r.status));
   const pendingReminders = mockReminders.filter((r) => r.status === '待发送').slice(0, 5);
+
+  const [timeRange, setTimeRange] = useState<TimeRange>('30d');
+  const [customStart, setCustomStart] = useState<string | undefined>();
+  const [customEnd, setCustomEnd] = useState<string | undefined>();
+
+  const handleTimeRangeChange = (val: TimeRange, start?: string, end?: string) => {
+    setTimeRange(val);
+    setCustomStart(start);
+    setCustomEnd(end);
+  };
 
   const statCards = [
     {
@@ -112,7 +135,91 @@ const Dashboard: React.FC = () => {
         ))}
       </div>
 
-      <div className="dashboard-row">
+      <SteampunkCard style={{ marginBottom: 24 }}>
+        <TimeRangeSelector
+          value={timeRange}
+          onChange={handleTimeRangeChange}
+          customStart={customStart}
+          customEnd={customEnd}
+        />
+      </SteampunkCard>
+
+      <SteampunkCard
+        style={{ marginBottom: 24 }}
+        title={
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <IconCalendarClock style={{ color: 'var(--color-brass-light)' }} />
+            营收趋势分析
+          </div>
+        }
+        extra={
+          <Tag color="gold" bordered size="small" icon={<IconArrowRise />}>
+            实时数据
+          </Tag>
+        }
+      >
+        <RevenueTrendChart
+          timeRange={timeRange}
+          customStart={customStart}
+          customEnd={customEnd}
+        />
+      </SteampunkCard>
+
+      <div className="dashboard-row" style={{ marginBottom: 24 }}>
+        <div className="dashboard-col-16">
+          <SteampunkCard
+            title={
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <IconApps style={{ color: 'var(--color-brass-light)' }} />
+                维修类型占比
+              </div>
+            }
+          >
+            <RepairTypePieChart timeRange={timeRange} />
+          </SteampunkCard>
+        </div>
+        <div className="dashboard-col-8">
+          <SteampunkCard
+            title={
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <IconLayout style={{ color: 'var(--color-brass-light)' }} />
+                维修状态分布
+              </div>
+            }
+          >
+            <RepairStatusBarChart timeRange={timeRange} />
+          </SteampunkCard>
+        </div>
+      </div>
+
+      <div className="dashboard-row" style={{ marginBottom: 24 }}>
+        <div className="dashboard-col-16">
+          <SteampunkCard
+            title={
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <IconTrophy style={{ color: 'var(--color-brass-light)' }} />
+                技师工作量排行
+              </div>
+            }
+          >
+            <TechnicianRankingChart timeRange={timeRange} />
+          </SteampunkCard>
+        </div>
+        <div className="dashboard-col-8">
+          <SteampunkCard
+            title={
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <IconUserGroup style={{ color: 'var(--color-brass-light)' }} />
+                客户分析
+              </div>
+            }
+          >
+            <CustomerDistributionChart timeRange={timeRange} />
+          </SteampunkCard>
+        </div>
+      </div>
+
+      <div className="dashboard-row" style={{ marginBottom: 24 }}>
         <div className="dashboard-col-16">
           <SteampunkCard
             title={
@@ -226,7 +333,7 @@ const Dashboard: React.FC = () => {
         </div>
       </div>
 
-      <div className="dashboard-row" style={{ marginTop: '24px' }}>
+      <div className="dashboard-row">
         <div className="dashboard-col-3">
           <SteampunkCard title="维修完成率">
             <div style={{ display: 'flex', justifyContent: 'center', padding: '20px 0' }}>
@@ -265,6 +372,12 @@ const Dashboard: React.FC = () => {
             </div>
           </SteampunkCard>
         </div>
+      </div>
+
+      <Divider style={{ borderColor: 'var(--color-border)', marginTop: 32, marginBottom: 0 }} />
+      <div style={{ textAlign: 'center', padding: '16px 0', color: 'var(--color-text-muted)', fontSize: 12 }}>
+        <IconClockCircle style={{ marginRight: 6 }} />
+        钟表维修管理系统 · 数据仪表盘 · 蒸汽朋克主题
       </div>
     </div>
   );

@@ -127,3 +127,46 @@ export interface DashboardStats {
   lowStockParts: number;
   pendingReminders: number;
 }
+
+export type TimeRange = '7d' | '30d' | '90d' | 'custom';
+export type RevenueGranularity = 'day' | 'week' | 'month';
+
+export interface RevenueDataPoint {
+  date: string;
+  revenue: number;
+  orderCount: number;
+}
+
+export interface RepairTypeData {
+  name: string;
+  value: number;
+}
+
+export interface RepairStatusData {
+  name: string;
+  value: number;
+}
+
+export interface TechnicianRanking {
+  name: string;
+  orderCount: number;
+  completionRate: number;
+  avgDuration: number;
+}
+
+export interface CustomerSourceData {
+  name: string;
+  value: number;
+}
+
+export interface CustomerLevelData {
+  name: string;
+  value: number;
+  revenue: number;
+}
+
+export interface ChartDrillDownContext {
+  type: 'revenue' | 'repairType' | 'repairStatus' | 'technician' | 'customer';
+  dataKey?: string;
+  dataLabel?: string;
+}
