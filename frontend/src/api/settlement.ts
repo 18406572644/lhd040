@@ -10,6 +10,10 @@ import type {
 } from '@/types';
 
 export const settlementApi = {
+  getAllSettlements: (): Promise<{ code: number; data: Settlement[]; message?: string }> => {
+    return request.get('/settlements');
+  },
+
   createSettlement: (data: SettlementRequest): Promise<{ code: number; data: Settlement; message?: string }> => {
     return request.post('/settlements', data);
   },

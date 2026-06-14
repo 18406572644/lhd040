@@ -254,7 +254,7 @@ export interface PickupVoucher {
 }
 
 export interface SettlementRequest {
-  repairId: string;
+  repairId: number | string;
   discount?: number;
   discountReason?: string;
   remark?: string;
@@ -262,7 +262,7 @@ export interface SettlementRequest {
 }
 
 export interface PaymentRequest {
-  settlementId: string;
+  settlementId: number | string;
   paymentMethod: PaymentMethodType;
   amount: number;
   transactionNo?: string;
@@ -271,8 +271,8 @@ export interface PaymentRequest {
 }
 
 export interface PickupConfirmRequest {
-  repairId: string;
-  settlementId: string;
+  repairId: number | string;
+  settlementId: number | string;
   customerSignature?: string;
   manualConfirm?: boolean;
   operator?: string;

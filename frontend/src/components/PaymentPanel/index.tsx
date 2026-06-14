@@ -34,7 +34,7 @@ interface PaymentPanelProps {
   settlement: Settlement;
   customer: Customer | null;
   paymentRecords: PaymentRecord[];
-  onPay: (method: PaymentMethodType, amount: number, transactionNo?: string, remark?: string) => Promise<void>;
+  onPay: (method: PaymentMethodType, amount: number, transactionNo?: string, remark?: string) => Promise<any>;
   loading?: boolean;
 }
 

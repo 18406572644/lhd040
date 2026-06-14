@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { settlementApi } from '@/api/settlement';
 import type {
   Settlement,
   PaymentRecord,
@@ -8,6 +9,7 @@ import type {
 } from '@/types';
 
 interface SettlementState {
+  allSettlements: Settlement[];
   settlements: Record<string, Settlement>;
   paymentRecords: Record<string, PaymentRecord[]>;
   vouchers: Record<string, PickupVoucher>;
@@ -19,9 +21,10 @@ interface SettlementState {
   isLoading: (key: string) => boolean;
   setLoading: (key: string, value: boolean) => void;
 
-  generateSettlementNo: () => string;
-  generatePaymentNo: () => string;
-  generateVoucherNo: () => string;
+  fetchAllSettlements: () => Promise<void>;
+  fetchSettlementByRepairId: (repairId: string) => Promise<Settlement | null>;
+  fetchPaymentRecords: (repairId: string) => Promise<void>;
+  fetchVoucherByRepairId: (repairId: string) => Promise<void>;
 
   createSettlement: (
     repairId: string,
@@ -30,7 +33,7 @@ interface SettlementState {
     discountReason?: string,
     remark?: string,
     operator?: string
-  ) => Settlement;
+  ) => Promise<Settlement>;
 
   processPayment: (
     repairId: string,
@@ -41,7 +44,7 @@ interface SettlementState {
     transactionNo?: string,
     operator?: string,
     remark?: string
-  ) => PaymentRecord;
+  ) => Promise<PaymentRecord>;
 
   confirmPickup: (
     repairId: string,
@@ -51,7 +54,7 @@ interface SettlementState {
     signature?: string,
     manualConfirm?: boolean,
     operator?: string
-  ) => PickupVoucher;
+  ) => Promise<PickupVoucher>;
 
   clearSettlement: (repairId: string) => void;
 }
@@ -68,6 +71,7 @@ const formatDateTime = (date: Date) => {
 export const useSettlementStore = create<SettlementState>()(
   persist(
     (set, get) => ({
+      allSettlements: [],
       settlements: {},
       paymentRecords: {},
       vouchers: {},
@@ -95,65 +99,98 @@ export const useSettlementStore = create<SettlementState>()(
         }));
       },
 
-      generateSettlementNo: () => {
-        const now = new Date();
-        const date = now.toISOString().slice(0, 10).replace(/-/g, '');
-        const random = Math.random().toString(36).substring(2, 10).toUpperCase();
-        return `JS${date}${random}`;
+      fetchAllSettlements: async () => {
+        try {
+          const res = await settlementApi.getAllSettlements();
+          if (res.code === 0 && res.data) {
+            set({ allSettlements: res.data });
+            const settlementMap: Record<string, Settlement> = {};
+            res.data.forEach((s) => {
+              if (s.repairId) {
+                settlementMap[String(s.repairId)] = s as any;
+              }
+            });
+            set((state) => ({
+              settlements: { ...state.settlements, ...settlementMap },
+            }));
+          }
+        } catch (err) {
+          console.error('获取结算单列表失败', err);
+        }
       },
 
-      generatePaymentNo: () => {
-        const now = new Date();
-        const date = now.toISOString().slice(0, 10).replace(/-/g, '');
-        const random = Math.random().toString(36).substring(2, 10).toUpperCase();
-        return `ZF${date}${random}`;
+      fetchSettlementByRepairId: async (repairId) => {
+        try {
+          const res = await settlementApi.getSettlementByRepairId(repairId);
+          if (res.code === 0 && res.data) {
+            set((state) => ({
+              settlements: { ...state.settlements, [repairId]: res.data as any },
+            }));
+            return res.data;
+          }
+          return null;
+        } catch (err) {
+          console.error('获取结算单失败', err);
+          return null;
+        }
       },
 
-      generateVoucherNo: () => {
-        const now = new Date();
-        const date = now.toISOString().slice(0, 10).replace(/-/g, '');
-        const random = Math.random().toString(36).substring(2, 10).toUpperCase();
-        return `QJ${date}${random}`;
+      fetchPaymentRecords: async (repairId) => {
+        try {
+          const res = await settlementApi.getPaymentRecordsByRepairId(repairId);
+          if (res.code === 0 && res.data) {
+            set((state) => ({
+              paymentRecords: { ...state.paymentRecords, [repairId]: res.data as any },
+            }));
+          }
+        } catch (err) {
+          console.error('获取支付记录失败', err);
+        }
       },
 
-      createSettlement: (repairId, repair, discount, discountReason, remark, operator) => {
+      fetchVoucherByRepairId: async (repairId) => {
+        try {
+          const res = await settlementApi.getPickupVoucherByRepairId(repairId);
+          if (res.code === 0 && res.data) {
+            set((state) => ({
+              vouchers: { ...state.vouchers, [repairId]: res.data as any },
+            }));
+          }
+        } catch (err) {
+          console.error('获取取件凭证失败', err);
+        }
+      },
+
+      createSettlement: async (repairId, repair, discount, discountReason, remark, operator) => {
         const existing = get().settlements[repairId];
         if (existing) {
           return existing;
         }
 
-        const partsCost = repair.partsUsed.reduce((sum: number, p: any) => sum + p.totalPrice, 0);
-        const laborCost = repair.laborCost || 0;
-        const subtotal = partsCost + laborCost;
-        const discountAmount = discount || 0;
-        const totalAmount = Math.max(0, subtotal - discountAmount);
-
-        const settlement: Settlement = {
-          id: `set-${Date.now()}`,
-          settlementNo: get().generateSettlementNo(),
-          repairId,
-          customerId: repair.customerId,
-          laborCost,
-          partsCost,
-          subtotal,
-          discount: discountAmount,
-          totalAmount,
-          paidAmount: 0,
+        const res = await settlementApi.createSettlement({
+          repairId: Number(repairId),
+          discount: discount || 0,
           discountReason,
           remark,
-          status: '待支付',
           operator,
-          createTime: formatDateTime(new Date()),
-        };
+        });
 
+        if (res.code !== 0 || !res.data) {
+          throw new Error(res.message || '结算单生成失败');
+        }
+
+        const settlement = res.data;
         set((state) => ({
-          settlements: { ...state.settlements, [repairId]: settlement },
+          settlements: { ...state.settlements, [repairId]: settlement as any },
+          allSettlements: state.allSettlements.some(s => s.id === settlement.id)
+            ? state.allSettlements
+            : [...state.allSettlements, settlement as any],
         }));
 
-        return settlement;
+        return settlement as any;
       },
 
-      processPayment: (
+      processPayment: async (
         repairId,
         settlementId,
         method,
@@ -168,67 +205,57 @@ export const useSettlementStore = create<SettlementState>()(
           throw new Error('结算单不存在');
         }
 
-        const remainingAmount = settlement.totalAmount - settlement.paidAmount;
-        if (amount > remainingAmount) {
-          throw new Error(`支付金额不能超过待付金额：${remainingAmount.toFixed(2)}`);
-        }
+        const sid = typeof settlementId === 'string' && settlementId.startsWith('set-')
+          ? Number(repairId)
+          : Number(settlementId) || Number(repairId);
 
-        if (method === 'MEMBER_BALANCE') {
-          const balance = customer?.memberBalance ?? 0;
-          if (balance < amount) {
-            throw new Error(`会员余额不足，当前余额：${balance}`);
-          }
-        }
-
-        if (method === 'POINTS') {
-          const points = customer?.memberPoints ?? 0;
-          const pointsNeeded = amount * 100;
-          if (points < pointsNeeded) {
-            throw new Error(`积分不足，需要${pointsNeeded}积分，当前${points}积分`);
-          }
-        }
-
-        const now = new Date();
-        const paymentRecord: PaymentRecord = {
-          id: `pay-${Date.now()}`,
-          paymentNo: get().generatePaymentNo(),
-          settlementId,
-          repairId,
-          customerId: settlement.customerId,
+        const res = await settlementApi.processPayment({
+          settlementId: Number(settlement.id) || sid,
           paymentMethod: method,
           amount,
           transactionNo,
-          status: '已支付',
           operator,
           remark,
-          createTime: formatDateTime(now),
-          paidTime: formatDateTime(now),
-        };
+        });
 
-        const newPaidAmount = settlement.paidAmount + amount;
-        const updatedSettlement: Settlement = {
-          ...settlement,
-          paidAmount: newPaidAmount,
-          paymentMethod: method,
-          transactionNo,
-          paidTime: formatDateTime(now),
-          status: newPaidAmount >= settlement.totalAmount ? '已支付' : '待支付',
-        };
+        if (res.code !== 0 || !res.data) {
+          throw new Error(res.message || '支付失败');
+        }
 
+        const paymentRecord = res.data;
         const existingRecords = get().paymentRecords[repairId] || [];
+
+        const updatedRes = await settlementApi.getSettlementByRepairId(repairId);
+        let updatedSettlement = settlement;
+        if (updatedRes.code === 0 && updatedRes.data) {
+          updatedSettlement = updatedRes.data as any;
+        } else {
+          const newPaidAmount = (settlement.paidAmount || 0) + amount;
+          updatedSettlement = {
+            ...settlement,
+            paidAmount: newPaidAmount,
+            paymentMethod: method as any,
+            transactionNo,
+            paidTime: paymentRecord.paidTime,
+            status: newPaidAmount >= (settlement.totalAmount || 0) ? '已支付' : '待支付',
+          };
+        }
 
         set((state) => ({
           settlements: { ...state.settlements, [repairId]: updatedSettlement },
           paymentRecords: {
             ...state.paymentRecords,
-            [repairId]: [paymentRecord, ...existingRecords],
+            [repairId]: [paymentRecord as any, ...existingRecords],
           },
+          allSettlements: state.allSettlements.map(s =>
+            String(s.repairId) === repairId ? (updatedSettlement as any) : s
+          ),
         }));
 
-        return paymentRecord;
+        return paymentRecord as any;
       },
 
-      confirmPickup: (
+      confirmPickup: async (
         repairId,
         settlementId,
         customer,
@@ -241,44 +268,38 @@ export const useSettlementStore = create<SettlementState>()(
         if (!settlement) {
           throw new Error('结算单不存在');
         }
-        if (settlement.status !== '已支付') {
-          throw new Error('请先完成支付后再取件');
-        }
-        if (!signature && !manualConfirm) {
-          throw new Error('请客户签字确认或手动确认取件');
-        }
 
-        const now = new Date();
-        const voucherNo = get().generateVoucherNo();
-        const qrCodeData = `PICKUP:${voucherNo}|REPAIR:${repairId}|CUSTOMER:${customer?.name || ''}`;
+        const sid = typeof settlementId === 'string' && settlementId.startsWith('set-')
+          ? Number(repairId)
+          : Number(settlementId) || Number(repairId);
 
-        const voucher: PickupVoucher = {
-          id: `vch-${Date.now()}`,
-          voucherNo,
-          repairId,
-          settlementId,
-          customerId: settlement.customerId,
-          customerName: customer?.name || '',
-          watchInfo: watch ? `${watch.brand} ${watch.model}` : '',
-          qrCodeData,
-          status: '已取件',
-          operator,
+        const res = await settlementApi.confirmPickup({
+          repairId: Number(repairId),
+          settlementId: Number(settlement.id) || sid,
           customerSignature: signature,
-          pickupTime: formatDateTime(now),
-          createTime: formatDateTime(now),
-        };
+          manualConfirm,
+          operator,
+        });
 
-        const updatedSettlement: Settlement = {
+        if (res.code !== 0 || !res.data) {
+          throw new Error(res.message || '取件确认失败');
+        }
+
+        const voucher = res.data;
+        const updatedSettlement: any = {
           ...settlement,
           customerSignature: signature,
         };
 
         set((state) => ({
           settlements: { ...state.settlements, [repairId]: updatedSettlement },
-          vouchers: { ...state.vouchers, [repairId]: voucher },
+          vouchers: { ...state.vouchers, [repairId]: voucher as any },
+          allSettlements: state.allSettlements.map(s =>
+            String(s.repairId) === repairId ? updatedSettlement : s
+          ),
         }));
 
-        return voucher;
+        return voucher as any;
       },
 
       clearSettlement: (repairId) => {
@@ -290,13 +311,20 @@ export const useSettlementStore = create<SettlementState>()(
             settlements: remainingSettlements,
             paymentRecords: remainingRecords,
             vouchers: remainingVouchers,
+            allSettlements: state.allSettlements.filter(s => String(s.repairId) !== repairId),
           };
         });
       },
     }),
     {
       name: 'settlement-storage',
-      version: 1,
+      version: 2,
+      partialize: (state) => ({
+        allSettlements: state.allSettlements,
+        settlements: state.settlements,
+        paymentRecords: state.paymentRecords,
+        vouchers: state.vouchers,
+      }),
     }
   )
 );

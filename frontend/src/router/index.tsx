@@ -17,6 +17,7 @@ const PartInventory = lazy(() => import('@/pages/Parts/Inventory'));
 const PartTransactions = lazy(() => import('@/pages/Parts/Transactions'));
 const MaintenanceReminders = lazy(() => import('@/pages/Maintenance/Reminders'));
 const UserManagement = lazy(() => import('@/pages/Users/Management'));
+const SettlementList = lazy(() => import('@/pages/Settlement/List'));
 
 const loadingFallback = (
   <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
@@ -60,6 +61,7 @@ const AppRouter: React.FC = () => {
             <Route path="parts/transactions" element={<PartTransactions />} />
             <Route path="maintenance" element={<MaintenanceReminders />} />
             <Route path="users" element={<UserManagement />} />
+            <Route path="settlements" element={<SettlementList />} />
           </Route>
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>

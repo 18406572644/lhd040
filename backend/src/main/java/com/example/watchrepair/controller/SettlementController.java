@@ -7,6 +7,7 @@ import com.example.watchrepair.dto.SettlementRequest;
 import com.example.watchrepair.entity.PaymentRecord;
 import com.example.watchrepair.entity.PickupVoucher;
 import com.example.watchrepair.entity.Settlement;
+import com.example.watchrepair.repository.SettlementRepository;
 import com.example.watchrepair.service.SettlementService;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -18,9 +19,17 @@ import java.util.List;
 public class SettlementController {
 
     private final SettlementService settlementService;
+    private final SettlementRepository settlementRepository;
 
-    public SettlementController(SettlementService settlementService) {
+    public SettlementController(SettlementService settlementService,
+                                SettlementRepository settlementRepository) {
         this.settlementService = settlementService;
+        this.settlementRepository = settlementRepository;
+    }
+
+    @GetMapping
+    public Result<List<Settlement>> getAllSettlements() {
+        return Result.success(settlementRepository.findAll());
     }
 
     @PostMapping

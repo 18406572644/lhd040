@@ -12,6 +12,7 @@ import {
   IconPoweroff,
   IconMenuFold,
   IconMenuUnfold,
+  IconEdit,
 } from '@arco-design/web-react/icon';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
@@ -35,6 +36,7 @@ const MainLayout: React.FC = () => {
     { key: '/customers', icon: <IconUser />, label: '客户管理' },
     { key: '/clocks', icon: <IconClockCircle />, label: '钟表档案' },
     { key: '/repairs', icon: <IconTool />, label: '维修管理' },
+    { key: '/settlements', icon: <IconEdit />, label: '结算单' },
     { key: '/parts', icon: <IconStorage />, label: '零件库存' },
     { key: '/maintenance', icon: <IconNotification />, label: '保养提醒' },
     { key: '/users', icon: <IconUserGroup />, label: '用户管理' },
@@ -55,6 +57,7 @@ const MainLayout: React.FC = () => {
       '/customers': '客户管理',
       '/clocks': '钟表档案',
       '/repairs': '维修管理',
+      '/settlements': '结算单',
       '/parts': '零件库存',
       '/maintenance': '保养提醒',
       '/users': '用户管理',

@@ -224,6 +224,9 @@ const RepairDetail: React.FC = () => {
   const createSettlement = useSettlementStore((state) => state.createSettlement);
   const processPayment = useSettlementStore((state) => state.processPayment);
   const confirmPickup = useSettlementStore((state) => state.confirmPickup);
+  const fetchSettlementByRepairId = useSettlementStore((state) => state.fetchSettlementByRepairId);
+  const fetchPaymentRecords = useSettlementStore((state) => state.fetchPaymentRecords);
+  const fetchVoucherByRepairId = useSettlementStore((state) => state.fetchVoucherByRepairId);
   const isLoading = useSettlementStore((state) => state.isLoading);
   const setLoading = useSettlementStore((state) => state.setLoading);
 
@@ -243,11 +246,19 @@ const RepairDetail: React.FC = () => {
   const voucher = useMemo(() => id ? getVoucher(id) : null, [id, getVoucher]);
   const loading = useMemo(() => isLoading(id || ''), [id, isLoading]);
 
+  React.useEffect(() => {
+    if (id && (repair?.status === '待取件' || repair?.status === '已完成')) {
+      fetchSettlementByRepairId(id);
+      fetchPaymentRecords(id);
+      fetchVoucherByRepairId(id);
+    }
+  }, [id, repair?.status]);
+
   const handleGenerateSettlement = async (discount?: number, discountReason?: string) => {
     if (!id || !repair) throw new Error('数据异常');
     setLoading(id, true);
     try {
-      return createSettlement(id, repair, discount, discountReason, '', '前台小刘');
+      return await createSettlement(id, repair, discount, discountReason, '', '前台小刘');
     } finally {
       setLoading(id, false);
     }
@@ -263,7 +274,7 @@ const RepairDetail: React.FC = () => {
     setLoading(id, true);
     try {
       const customer = customerData;
-      processPayment(id, settlement.id, method, amount, customer, transactionNo, '前台小刘', remark);
+      return await processPayment(id, settlement.id, method, amount, customer, transactionNo, '前台小刘', remark);
     } finally {
       setLoading(id, false);
     }
@@ -273,7 +284,7 @@ const RepairDetail: React.FC = () => {
     if (!id || !settlement) throw new Error('数据异常');
     setLoading(id, true);
     try {
-      const result = confirmPickup(
+      const result = await confirmPickup(
         id,
         settlement.id,
         customerData,
