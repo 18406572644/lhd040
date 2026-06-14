@@ -71,3 +71,82 @@
 .arco-upload-picture-card:hover {
   border-color: var(--color-brass-light) !important;
 }
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  .settlement-print-area,
+  .settlement-print-area *,
+  .voucher-print-area,
+  .voucher-print-area * {
+    visibility: visible;
+  }
+
+  .settlement-print-area,
+  .voucher-print-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    background: #fff !important;
+    color: #000 !important;
+    padding: 20px;
+  }
+
+  .settlement-print-area .divider-brass,
+  .voucher-print-area .divider-brass {
+    border-color: #000 !important;
+  }
+
+  .settlement-print-area h2,
+  .settlement-print-area h3,
+  .settlement-print-area h4,
+  .voucher-print-area h2,
+  .voucher-print-area h3,
+  .voucher-print-area h4 {
+    color: #000 !important;
+  }
+
+  .settlement-print-area [style*="color: var(--color-brass-light)"],
+  .voucher-print-area [style*="color: var(--color-brass-light)"] {
+    color: #000 !important;
+  }
+
+  .settlement-print-area [style*="background: rgba(139, 69, 19, 0.1)"],
+  .voucher-print-area [style*="background: rgba(139, 69, 19, 0.1)"] {
+    background: #f5f5f5 !important;
+  }
+
+  .settlement-print-area [style*="background: rgba(107, 142, 35, 0.1)"],
+  .voucher-print-area [style*="background: rgba(107, 142, 35, 0.1)"] {
+    background: #f0f8e8 !important;
+  }
+
+  .settlement-print-area [style*="background: rgba(218, 165, 32, 0.1)"],
+  .voucher-print-area [style*="background: rgba(218, 165, 32, 0.1)"] {
+    background: #fff9e6 !important;
+  }
+
+  .settlement-print-area .arco-tag,
+  .voucher-print-area .arco-tag,
+  .settlement-print-area button,
+  .voucher-print-area button {
+    display: none !important;
+  }
+
+  .settlement-print-area [style*="border: 1px solid var(--color-border)"],
+  .voucher-print-area [style*="border: 1px solid var(--color-border)"] {
+    border-color: #ccc !important;
+  }
+
+  .settlement-print-area [style*="border: 2px dashed var(--color-border)"],
+  .voucher-print-area [style*="border: 2px dashed var(--color-border)"] {
+    border-color: #999 !important;
+  }
+
+  @page {
+    margin: 1cm;
+  }
+}

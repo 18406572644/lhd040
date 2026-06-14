@@ -1,10 +1,13 @@
+D:\lhd040\backend\src\main\java\com\example\watchrepair\dto\PickupConfirmRequest.java
 D:\lhd040\backend\src\main\java\com\example\watchrepair\config\CorsConfig.java
 D:\lhd040\backend\src\main\java\com\example\watchrepair\entity\SysUser.java
 D:\lhd040\backend\src\main\java\com\example\watchrepair\service\RepairRecordService.java
+D:\lhd040\backend\src\main\java\com\example\watchrepair\entity\PaymentRecord.java
 D:\lhd040\backend\src\main\java\com\example\watchrepair\entity\ReminderStatus.java
 D:\lhd040\backend\src\main\java\com\example\watchrepair\repository\WatchRepository.java
 D:\lhd040\backend\src\main\java\com\example\watchrepair\controller\WatchController.java
 D:\lhd040\backend\src\main\java\com\example\watchrepair\repository\PartRepository.java
+D:\lhd040\backend\src\main\java\com\example\watchrepair\entity\Settlement.java
 D:\lhd040\backend\src\main\java\com\example\watchrepair\service\WatchService.java
 D:\lhd040\backend\src\main\java\com\example\watchrepair\security\JwtTokenProvider.java
 D:\lhd040\backend\src\main\java\com\example\watchrepair\dto\LoginRequest.java
@@ -12,8 +15,10 @@ D:\lhd040\backend\src\main\java\com\example\watchrepair\dto\StatusTransitionRequ
 D:\lhd040\backend\src\main\java\com\example\watchrepair\common\Result.java
 D:\lhd040\backend\src\main\java\com\example\watchrepair\security\JwtAuthenticationFilter.java
 D:\lhd040\backend\src\main\java\com\example\watchrepair\dto\RegisterRequest.java
+D:\lhd040\backend\src\main\java\com\example\watchrepair\repository\SettlementRepository.java
 D:\lhd040\backend\src\main\java\com\example\watchrepair\controller\CustomerController.java
 D:\lhd040\backend\src\main\java\com\example\watchrepair\repository\SysUserRepository.java
+D:\lhd040\backend\src\main\java\com\example\watchrepair\dto\PaymentRequest.java
 D:\lhd040\backend\src\main\java\com\example\watchrepair\entity\RepairStatusLog.java
 D:\lhd040\backend\src\main\java\com\example\watchrepair\repository\CustomerRepository.java
 D:\lhd040\backend\src\main\java\com\example\watchrepair\service\AuthService.java
@@ -27,8 +32,10 @@ D:\lhd040\backend\src\main\java\com\example\watchrepair\security\SecurityConfig.
 D:\lhd040\backend\src\main\java\com\example\watchrepair\common\PageResult.java
 D:\lhd040\backend\src\main\java\com\example\watchrepair\entity\Role.java
 D:\lhd040\backend\src\main\java\com\example\watchrepair\repository\RepairStatusLogRepository.java
+D:\lhd040\backend\src\main\java\com\example\watchrepair\entity\PickupVoucher.java
 D:\lhd040\backend\src\main\java\com\example\watchrepair\controller\RepairPhotoController.java
 D:\lhd040\backend\src\main\java\com\example\watchrepair\controller\RepairRecordController.java
+D:\lhd040\backend\src\main\java\com\example\watchrepair\repository\PickupVoucherRepository.java
 D:\lhd040\backend\src\main\java\com\example\watchrepair\WatchRepairApplication.java
 D:\lhd040\backend\src\main\java\com\example\watchrepair\repository\MaintenanceReminderRepository.java
 D:\lhd040\backend\src\main\java\com\example\watchrepair\repository\RepairPartRepository.java
@@ -36,8 +43,12 @@ D:\lhd040\backend\src\main\java\com\example\watchrepair\dto\LoginResponse.java
 D:\lhd040\backend\src\main\java\com\example\watchrepair\controller\AuthController.java
 D:\lhd040\backend\src\main\java\com\example\watchrepair\entity\Customer.java
 D:\lhd040\backend\src\main\java\com\example\watchrepair\repository\RepairPhotoRepository.java
+D:\lhd040\backend\src\main\java\com\example\watchrepair\controller\SettlementController.java
 D:\lhd040\backend\src\main\java\com\example\watchrepair\entity\RepairPhoto.java
+D:\lhd040\backend\src\main\java\com\example\watchrepair\entity\PaymentMethod.java
 D:\lhd040\backend\src\main\java\com\example\watchrepair\entity\Watch.java
+D:\lhd040\backend\src\main\java\com\example\watchrepair\repository\PaymentRecordRepository.java
+D:\lhd040\backend\src\main\java\com\example\watchrepair\service\SettlementService.java
 D:\lhd040\backend\src\main\java\com\example\watchrepair\controller\MaintenanceReminderController.java
 D:\lhd040\backend\src\main\java\com\example\watchrepair\repository\RepairRecordRepository.java
 D:\lhd040\backend\src\main\java\com\example\watchrepair\entity\MaintenanceReminder.java
@@ -46,6 +57,7 @@ D:\lhd040\backend\src\main\java\com\example\watchrepair\security\UserDetailsServ
 D:\lhd040\backend\src\main\java\com\example\watchrepair\entity\RepairRecord.java
 D:\lhd040\backend\src\main\java\com\example\watchrepair\service\RepairPhotoService.java
 D:\lhd040\backend\src\main\java\com\example\watchrepair\dto\PickupNotifyRequest.java
+D:\lhd040\backend\src\main\java\com\example\watchrepair\dto\SettlementRequest.java
 D:\lhd040\backend\src\main\java\com\example\watchrepair\entity\Part.java
 D:\lhd040\backend\src\main\java\com\example\watchrepair\service\CustomerService.java
 D:\lhd040\backend\src\main\java\com\example\watchrepair\entity\PhotoType.java

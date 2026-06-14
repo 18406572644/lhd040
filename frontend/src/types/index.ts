@@ -187,3 +187,94 @@ export interface ChartDrillDownContext {
   dataKey?: string;
   dataLabel?: string;
 }
+
+export type PaymentMethodType = 'CASH' | 'WECHAT' | 'ALIPAY' | 'BANK_CARD' | 'MEMBER_BALANCE' | 'POINTS';
+
+export const PAYMENT_METHOD_LABELS: Record<PaymentMethodType, string> = {
+  CASH: '现金',
+  WECHAT: '微信',
+  ALIPAY: '支付宝',
+  BANK_CARD: '银行卡',
+  MEMBER_BALANCE: '会员余额',
+  POINTS: '积分抵现',
+};
+
+export interface Settlement {
+  id: string;
+  settlementNo: string;
+  repairId: string;
+  customerId: string;
+  laborCost: number;
+  partsCost: number;
+  subtotal: number;
+  discount: number;
+  totalAmount: number;
+  paidAmount: number;
+  discountReason?: string;
+  remark?: string;
+  paymentMethod?: PaymentMethodType;
+  transactionNo?: string;
+  status: '待支付' | '已支付';
+  operator?: string;
+  customerSignature?: string;
+  createTime: string;
+  paidTime?: string;
+}
+
+export interface PaymentRecord {
+  id: string;
+  paymentNo: string;
+  settlementId: string;
+  repairId: string;
+  customerId: string;
+  paymentMethod: PaymentMethodType;
+  amount: number;
+  transactionNo?: string;
+  status: string;
+  operator?: string;
+  remark?: string;
+  createTime: string;
+  paidTime: string;
+}
+
+export interface PickupVoucher {
+  id: string;
+  voucherNo: string;
+  repairId: string;
+  settlementId: string;
+  customerId: string;
+  customerName: string;
+  watchInfo: string;
+  qrCodeData: string;
+  status: string;
+  operator?: string;
+  customerSignature?: string;
+  pickupTime: string;
+  createTime: string;
+}
+
+export interface SettlementRequest {
+  repairId: string;
+  discount?: number;
+  discountReason?: string;
+  remark?: string;
+  operator?: string;
+}
+
+export interface PaymentRequest {
+  settlementId: string;
+  paymentMethod: PaymentMethodType;
+  amount: number;
+  transactionNo?: string;
+  operator?: string;
+  remark?: string;
+}
+
+export interface PickupConfirmRequest {
+  repairId: string;
+  settlementId: string;
+  customerSignature?: string;
+  manualConfirm?: boolean;
+  operator?: string;
+  remark?: string;
+}

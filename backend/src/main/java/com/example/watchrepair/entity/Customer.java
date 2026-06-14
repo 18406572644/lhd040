@@ -28,6 +28,14 @@ public class Customer {
     @Column(columnDefinition = "text")
     private String notes;
 
+    @Column(precision = 10, scale = 2)
+    private java.math.BigDecimal memberBalance;
+
+    private Integer memberPoints;
+
+    @Column(length = 20)
+    private String memberLevel;
+
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime createTime;
@@ -78,6 +86,30 @@ public class Customer {
 
     public void setNotes(String notes) {
         this.notes = notes;
+    }
+
+    public java.math.BigDecimal getMemberBalance() {
+        return memberBalance;
+    }
+
+    public void setMemberBalance(java.math.BigDecimal memberBalance) {
+        this.memberBalance = memberBalance;
+    }
+
+    public Integer getMemberPoints() {
+        return memberPoints;
+    }
+
+    public void setMemberPoints(Integer memberPoints) {
+        this.memberPoints = memberPoints;
+    }
+
+    public String getMemberLevel() {
+        return memberLevel;
+    }
+
+    public void setMemberLevel(String memberLevel) {
+        this.memberLevel = memberLevel;
     }
 
     public LocalDateTime getCreateTime() {

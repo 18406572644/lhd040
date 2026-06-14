@@ -36,10 +36,14 @@ import {
 import { useParams, useNavigate } from 'react-router-dom';
 import { SteampunkCard } from '@/components/SteampunkCard';
 import { ImageCompare } from '@/components/ImageCompare';
+import { SettlementPanel } from '@/components/SettlementPanel';
+import { PaymentPanel } from '@/components/PaymentPanel';
+import { PickupVoucherPanel } from '@/components/PickupVoucherPanel';
 import { mockParts, mockCustomers, mockClocks } from '@/mock/data';
 import { useRepairStore } from '@/store/repairStore';
+import { useSettlementStore } from '@/store/settlementStore';
 import { fileToBase64 } from '@/utils/image';
-import type { RepairPart, RepairStatusType, RepairStatusLog } from '@/types';
+import type { RepairPart, RepairStatusType, RepairStatusLog, PaymentMethodType, Settlement, PaymentRecord, PickupVoucher } from '@/types';
 
 const TabPane = Tabs.TabPane;
 const FormItem = Form.Item;
@@ -212,6 +216,16 @@ const RepairDetail: React.FC = () => {
   const uploadPhoto = useRepairStore((state) => state.uploadPhoto);
   const deletePhoto = useRepairStore((state) => state.deletePhoto);
   const sendPickupNotify = useRepairStore((state) => state.sendPickupNotify);
+  const updateStatus = useRepairStore((state) => state.updateStatus);
+
+  const getSettlement = useSettlementStore((state) => state.getSettlement);
+  const getPaymentRecords = useSettlementStore((state) => state.getPaymentRecords);
+  const getVoucher = useSettlementStore((state) => state.getVoucher);
+  const createSettlement = useSettlementStore((state) => state.createSettlement);
+  const processPayment = useSettlementStore((state) => state.processPayment);
+  const confirmPickup = useSettlementStore((state) => state.confirmPickup);
+  const isLoading = useSettlementStore((state) => state.isLoading);
+  const setLoading = useSettlementStore((state) => state.setLoading);
 
   const [partModalVisible, setPartModalVisible] = useState(false);
   const [partForm] = Form.useForm();
@@ -222,6 +236,66 @@ const RepairDetail: React.FC = () => {
   const [previewVisible, setPreviewVisible] = useState(false);
   const [previewUrl, setPreviewUrl] = useState('');
   const [uploading, setUploading] = useState(false);
+  const [activeTab, setActiveTab] = useState('info');
+
+  const settlement = useMemo(() => id ? getSettlement(id) : null, [id, getSettlement]);
+  const paymentRecords = useMemo(() => id ? getPaymentRecords(id) : [], [id, getPaymentRecords]);
+  const voucher = useMemo(() => id ? getVoucher(id) : null, [id, getVoucher]);
+  const loading = useMemo(() => isLoading(id || ''), [id, isLoading]);
+
+  const handleGenerateSettlement = async (discount?: number, discountReason?: string) => {
+    if (!id || !repair) throw new Error('数据异常');
+    setLoading(id, true);
+    try {
+      return createSettlement(id, repair, discount, discountReason, '', '前台小刘');
+    } finally {
+      setLoading(id, false);
+    }
+  };
+
+  const handlePay = async (
+    method: PaymentMethodType,
+    amount: number,
+    transactionNo?: string,
+    remark?: string
+  ) => {
+    if (!id || !settlement) throw new Error('数据异常');
+    setLoading(id, true);
+    try {
+      const customer = customerData;
+      processPayment(id, settlement.id, method, amount, customer, transactionNo, '前台小刘', remark);
+    } finally {
+      setLoading(id, false);
+    }
+  };
+
+  const handleConfirmPickup = async (signature?: string, manualConfirm?: boolean) => {
+    if (!id || !settlement) throw new Error('数据异常');
+    setLoading(id, true);
+    try {
+      const result = confirmPickup(
+        id,
+        settlement.id,
+        customerData,
+        clockData,
+        signature,
+        manualConfirm,
+        '前台小刘'
+      );
+      updateStatus(id, '已完成');
+      return result;
+    } finally {
+      setLoading(id, false);
+    }
+  };
+
+  const handlePrintSettlement = () => {
+    window.print();
+  };
+
+  const handlePrintVoucher = () => {
+    window.print();
+  };
 
   const allowedTransitions = useMemo(() => {
     if (!repair) return [];
@@ -560,7 +634,7 @@ const RepairDetail: React.FC = () => {
 
         <div style={{ marginTop: '20px' }}>
           <SteampunkCard>
-            <Tabs defaultActiveTab="info">
+            <Tabs activeTab={activeTab} onChange={setActiveTab}>
               <TabPane key="info" title="基本信息">
                 <Descriptions
                 column={2}
@@ -723,6 +797,42 @@ const RepairDetail: React.FC = () => {
                   {renderPhotoGrid(afterPhotos, 'after')}
                 </div>
               </TabPane>
+
+              {repair.status === '待取件' || repair.status === '已完成' ? (
+                <TabPane key="settlement" title="取件结算">
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                    <SettlementPanel
+                      repair={repair}
+                      settlement={settlement}
+                      onGenerateSettlement={handleGenerateSettlement}
+                      onPrint={handlePrintSettlement}
+                      loading={loading}
+                    />
+
+                    {settlement && (
+                      <PaymentPanel
+                        settlement={settlement}
+                        customer={customerData || null}
+                        paymentRecords={paymentRecords}
+                        onPay={handlePay}
+                        loading={loading}
+                      />
+                    )}
+
+                    {settlement && (
+                      <PickupVoucherPanel
+                        repair={repair}
+                        settlement={settlement}
+                        voucher={voucher}
+                        customer={customerData || null}
+                        onConfirmPickup={handleConfirmPickup}
+                        onPrint={handlePrintVoucher}
+                        loading={loading}
+                      />
+                    )}
+                  </div>
+                </TabPane>
+              ) : null}
             </Tabs>
           </SteampunkCard>
         </div>
